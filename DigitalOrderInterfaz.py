@@ -29,11 +29,27 @@ def mostrarMenu(frame, mesa_seleccionada):
         boton_plato.pack(pady=5)
     
     # Mostrar el total acumulado
-    etiqueta_total = ttk.Label(frame, text="Total acumulado:", font=("Helvetica", 14), foreground="#E0E0E0", background="#333333")
+    etiqueta_total = ttk.Label(frame, text="Total de su Pedido:", font=("Helvetica", 14), foreground="#E0E0E0", background="#333333")
     etiqueta_total.pack(pady=10)
 
     etiqueta_total_valor = ttk.Label(frame, textvariable=total, font=("Helvetica", 14, "bold"), foreground="#E0E0E0", background="#333333")
     etiqueta_total_valor.pack(pady=10)
+
+    # Función para mostrar la confirmación del pedido
+    def confirmarPedido():
+        # Limpiar el frame
+        for widget in frame.winfo_children():
+            widget.destroy()
+
+        # Mostrar mensaje de confirmación
+        mensaje_confirmacion = f"Pedido confirmado para la Mesa {mesa_seleccionada}, Total: ${total.get():.2f}"
+        etiqueta_confirmacion = ttk.Label(frame, text=mensaje_confirmacion, font=("Helvetica", 18, "bold"), foreground="#E0E0E0", background="#333333")
+        etiqueta_confirmacion.pack(pady=20)
+    
+    # Botón para confirmar el pedido
+    boton_confirmar = ttk.Button(frame, text="Confirmar Pedido", style="DarkButton.TButton", 
+                                  command=confirmarPedido)
+    boton_confirmar.pack(pady=20)   
 
 # Función para mostrar las mesas disponibles
 def seleccionarMesa(frame):
@@ -72,10 +88,10 @@ def pantallaInicial(frame):
 # Función para la pantalla principal
 def pantallaPrincipal():
     pantalla = tk.Tk()  # Crear ventana principal
-    pantalla.iconphoto(False, PhotoImage(file='DigitalOrder.png'))  # Icono de la Aplicación
+    pantalla.iconphoto(False, PhotoImage(file='Digital Order\DigitalOrder.png'))  # Icono de la Aplicación
     pantalla.title("Digital Order")  # Título Principal
     window_width = 600  # Ancho de la ventana
-    window_height = 480  # Alto de la ventana
+    window_height = 580  # Alto de la ventana
 
     # Obtener la resolución de la pantalla
     screen_width = pantalla.winfo_screenwidth()
@@ -97,7 +113,7 @@ def pantallaPrincipal():
         "DarkButton.TButton": {
             "configure": {"font": ("Helvetica", 12), "padding": 10, "relief": "flat", 
                           "background": "#444444", "foreground": "#E0E0E0", "borderwidth": 0,
-                          "focuscolor": ""},
+                          "focuscolor": ""}, 
             "map": {
                 "background": [("active", "#555555"), ("pressed", "#222222")],
                 "foreground": [("active", "#E0E0E0"), ("pressed", "#E0E0E0")]
