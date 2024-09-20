@@ -76,7 +76,7 @@ def pantallaInicial(frame):
     # Limpiar el frame
     for widget in frame.winfo_children():
         widget.destroy()
-    
+
     # Etiqueta de bienvenida
     label = ttk.Label(frame, text="Digital Order", font=("Helvetica", 24, "bold"), foreground="#E0E0E0", background="#333333")
     label.pack(pady=10)
@@ -84,6 +84,45 @@ def pantallaInicial(frame):
     # Botón para seleccionar mesa
     button = ttk.Button(frame, text="Seleccionar Mesa", style="DarkButton.TButton", command=lambda: seleccionarMesa(frame))
     button.pack(pady=20, padx=20)
+
+    # Botón para iniciar sesión (Admin)
+    btn_iniciar_sesion = ttk.Button(frame, text="Iniciar sesión (Admin)", style="DarkButton.TButton", command=lambda: iniciarSesion(frame, "Admin"))
+    btn_iniciar_sesion.pack(pady=10, padx=20)
+
+    # Botón para iniciar sesión (Cocinero)
+    inicioSesionCocinero = ttk.Button(frame, text="Iniciar sesión (Cocinero)", style="DarkButton.TButton", command=lambda: iniciarSesion(frame, "Cocinero"))
+    inicioSesionCocinero.pack(pady=10, padx=20)
+
+def iniciarSesion(frame, rol):
+    # Limpiar el frame
+    for widget in frame.winfo_children():
+        widget.destroy()
+
+    # Etiqueta de bienvenida
+    label = ttk.Label(frame, text=f"Iniciar sesión ({rol})", font=("Helvetica", 18, "bold"))
+    label.pack(pady=10)
+
+    # Campo de usuario
+    label_usuario = ttk.Label(frame, text="Usuario:")
+    label_usuario.pack(pady=5)
+    entry_usuario = ttk.Entry(frame)
+    entry_usuario.pack(pady=5)
+
+    # Campo de contraseña
+    label_contraseña = ttk.Label(frame, text="Contraseña:")
+    label_contraseña.pack(pady=5)
+    entry_contraseña = ttk.Entry(frame, show="*")
+    entry_contraseña.pack(pady=5)
+
+    # Función para confirmar el inicio de sesión
+    def confirmarLogin():
+        usuarioIngresado = entry_usuario.get()
+        contraseñaIngresada = entry_contraseña.get()
+        #print(f"Usuario: {usuarioIngresado}, Contraseña: {contraseñaIngresada}")  # Solo para ver que se capturan los datos
+
+    # Botón de iniciar sesión
+    btn_confirmar = ttk.Button(frame, text="Iniciar sesión", command=confirmarLogin)
+    btn_confirmar.pack(pady=10)
 
 # Función para la pantalla principal
 def pantallaPrincipal():
