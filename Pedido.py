@@ -1,4 +1,5 @@
 
+
 #Clase pedido con sus variables
 class Pedido:
     def __init__(self, numero_mesa):

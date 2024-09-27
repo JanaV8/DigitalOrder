@@ -28,15 +28,15 @@ def agregarAdministrador(usuario,contraseña):
         conn.commit()
         
         #Retornamos un mensaje de exito o de ya existencia dependiendo del caso
-        return 'Usuario Agregado Correctamente'
+        return 'Se agrego el usuario correctamente'
     except pymysql.IntegrityError:
         return 'Usuario existente'
     
 #Eliminamos un administrador de la base de dato     
-def eliminarAdministrador(usuario):
+def eliminarAdministrador(usuario,contraseña):
     try:
         # Eliminar el administrador
-        cursor.execute("DELETE FROM administradores WHERE usuario = %s", (usuario))
+        cursor.execute("DELETE FROM administradores WHERE usuario = %s AND contraseña = %s", (usuario, contraseña))
         conn.commit()
 
         # Verificar si realmente se eliminó alguna fila
@@ -72,12 +72,12 @@ def eliminar_plato(self, plato):
     pass
 
 #Funcion para añadir un ingrediente
-def añadir_ingrediente(self, ingredientes):
-    pass
+#def añadir_ingrediente(self, ingredientes):
+#    pass
 
 #Funcion para modificar un ingrediente
-def modificar_ingrediente(self, ingredientes):
-    pass
+#def modificar_ingrediente(self, ingredientes):
+#    pass
 
 #Funcion para eliminar un ingrediente
 def eliminar_ingrediente(self, ingredientes):

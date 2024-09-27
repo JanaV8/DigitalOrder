@@ -1,4 +1,21 @@
+import pymysql
 
+conn = pymysql.connect( 
+        host='26.92.40.13',
+        user='root',
+        password='',
+        database='plato_bd')
+cursor = conn.cursor()
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS platos (
+    
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT,
+    precio REAL NOT NULL
+)
+''')
 #Clase plato con sus variables
 class Plato:
     def __init__(self, nombre, precio, descripcion):

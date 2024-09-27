@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 import Administrador
-import pymysql
 
 # Funcion para limpiar la pantalla (Elimina todos los widgets)
 def limpiar_frame(frame):
@@ -246,15 +245,20 @@ def pantalla_eliminar_admin(frame):
     ttk.Label(frame, text="Usuario:").pack(pady=5)
     entry_usuario = ttk.Entry(frame)
     entry_usuario.pack(pady=5)
+    
+    ttk.Label(frame, text="Contraseña:").pack(pady=5)
+    entry_contraseña = ttk.Entry(frame)
+    entry_contraseña.pack(pady=5)
+    
 
     ttk.Button(frame, text="Eliminar", style="DarkButton.TButton", 
-               command=lambda: eliminar_admin(entry_usuario.get(), frame)).pack(pady=10)
+               command=lambda: eliminar_admin(entry_usuario.get(),entry_contraseña.get(), frame)).pack(pady=10)
 
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
-def eliminar_admin(usuario, frame):
-    mensaje = Administrador.eliminarAdministrador(usuario)
+def eliminar_admin(usuario,contraseña, frame):
+    mensaje = Administrador.eliminarAdministrador(usuario,contraseña)
     ttk.Label(frame, text=mensaje, foreground="green" if "exitosamente" in mensaje else "red").pack(pady=5)
 
 # Pantalla Inicial
