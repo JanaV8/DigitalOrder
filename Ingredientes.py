@@ -45,5 +45,6 @@ def modificar_ingrediente(id_seleccionado, nombre_nuevo = None ,cantidad_nueva =
     elif cantidad_nueva:
         cursor.execute("UPDATE ingredientes SET stock = %s WHERE id = %s", (cantidad_nueva, id_seleccionado))
     else:
-        return "No hay valores que actualizar."        
-    
+        return "No hay valores que actualizar."
+    conn.commit()
+
