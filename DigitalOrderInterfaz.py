@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 import Administrador
+import pymysql
 
 # Funcion para limpiar la pantalla (Elimina todos los widgets)
 def limpiar_frame(frame):
@@ -112,15 +113,15 @@ def iniciar_sesion(frame, rol):
 def confirmar_login(entry_usuario, entry_contraseña, frame):
     usuario = entry_usuario.get()
     contraseña = entry_contraseña.get()
+            
     if not usuario or not contraseña:
         ttk.Label(frame, text="Usuario y/o contraseña vacíos", foreground="red").pack(pady=5)
     else:
-        mensaje = Administrador.validarAdministrador(usuario, contraseña)
-        if mensaje == "Acceso concedido.":
-            ttk.Label(frame, text=mensaje, foreground="green").pack(pady=5)
+        islogin = Administrador.validarAdministrador(usuario, contraseña)
+        if islogin == True:
             mostrar_menu_admin(frame)  # Cambiar a una pantalla de administrador
         else:
-            ttk.Label(frame, text=mensaje, foreground="red").pack(pady=5)
+            ttk.Label(frame, text="Usuario y/o contraseña incorrectos", foreground="red").pack(pady=5)
 
 #Funcion para mostrar u ocultar la contraseña
 def mostrar_contraseña(entry):
@@ -204,26 +205,37 @@ def pantalla_editar_ingredientes(frame):
 def pantalla_agregar_admin(frame):
     limpiar_frame(frame)
 
+    # Título de la pantalla
     ttk.Label(frame, text="Agregar Nuevo Administrador", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
+    # Etiqueta de Usuario
     ttk.Label(frame, text="Usuario:").pack(pady=5)
     entry_usuario = ttk.Entry(frame)
     entry_usuario.pack(pady=5)
 
+    # Etiqueta de Contraseña
     ttk.Label(frame, text="Contraseña:").pack(pady=5)
     entry_contraseña = ttk.Entry(frame, show="*")
     entry_contraseña.pack(pady=5)
 
+    # Botón para agregar el administrador
     ttk.Button(frame, text="Agregar", style="DarkButton.TButton", 
                command=lambda: agregar_admin(entry_usuario.get(), entry_contraseña.get(), frame)).pack(pady=10)
 
+    # Botón para volver al menú anterior
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
+# Función para agregar administrador
 def agregar_admin(usuario, contraseña, frame):
-    mensaje = Administrador.agregarAdministrador(usuario, contraseña)
-    ttk.Label(frame, text=mensaje, foreground="green" if "exitosamente" in mensaje else "red").pack(pady=5)
+    # Validar que los campos no estén vacíos
+    if not usuario or not contraseña:
+        ttk.Label(frame, text="Usuario y/o contraseña vacíos", foreground="red").pack(pady=5)
+    else:
+        # Intentar agregar al administrador
+        mensaje = Administrador.agregarAdministrador(usuario, contraseña)
+        ttk.Label(frame, text=mensaje, foreground="green" if "Correctamente" in mensaje else "red").pack(pady=5)
 
 def pantalla_eliminar_admin(frame):
     limpiar_frame(frame)
@@ -272,8 +284,8 @@ def pantalla_inicial(frame):
 # Configuración de la ventana principal
 def pantalla_principal():
     # Código para agregar un administrador por defecto
-    usuario_inicial = "admin"
-    contraseña_inicial = "admin123"
+    usuario_inicial = "AdminPrincipal"
+    contraseña_inicial = "1234"
     mensaje = Administrador.agregarAdministrador(usuario_inicial, contraseña_inicial)
     print(mensaje)  # Esto imprimirá si el administrador fue agregado correctamente o si ya existe.
 
