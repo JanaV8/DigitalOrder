@@ -144,6 +144,10 @@ def mostrar_menu_admin(frame):
     ttk.Button(frame, text="Eliminar Administrador", style="DarkButton.TButton", 
                command=lambda: pantalla_eliminar_admin(frame)).pack(pady=10)
 
+    #Boton para modificar datos de administrador
+    ttk.Button(frame, text="Modificar Administrador", style="DarkButton.TButton", 
+               command=lambda: pantalla_modificar_admin(frame)).pack(pady=10)
+
     # Botón para Editar Menú 
     ttk.Button(frame, text="Editar Menú", style="DarkButton.TButton", 
                command=lambda: pantalla_editar_menu(frame)).pack(pady=10)
@@ -256,6 +260,37 @@ def pantalla_eliminar_admin(frame):
 def eliminar_admin(contraseña, frame):
     mensaje = Administrador.eliminarAdministrador(contraseña)
     ttk.Label(frame, text=mensaje, foreground="green" if "exitosamente" in mensaje else "red").pack(pady=5)
+
+#Pantalla para modificar los datos del administrador
+def pantalla_modificar_admin(frame):
+    limpiar_frame(frame)
+    
+    ttk.Label(frame, text="Modificar Administrador", font=("Helvetica", 18, "bold"), 
+              foreground="#E0E0E0", background="#333333").pack(pady=10)
+    
+    ttk.Label(frame, text="Ingresar ID:").pack(pady=5)
+    id_ingresado = ttk.Entry(frame)
+    id_ingresado.pack(pady=5)
+    
+    ttk.Label(frame, text="Ingresar nuevo nombre:").pack(pady=5)
+    nombre_nuevo = ttk.Entry(frame)
+    nombre_nuevo.pack(pady=5)
+    
+    ttk.Label(frame, text="Ingresar nueva contraseña:").pack(pady=5)
+    contraseña_nueva = ttk.Entry(frame)
+    contraseña_nueva.pack(pady=5)
+    
+    ttk.Button(frame, text="Modificar", style="DarkButton.TButton", 
+               command=lambda: mod_admin(id_ingresado.get(),nombre_nuevo.get(),contraseña_nueva.get())).pack(pady=10)
+
+    ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
+               command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
+
+#modificar administrador
+def mod_admin(id_ingresado, nombre_nuevo, contraseña_nueva):
+    Administrador.actualizarAdministrador(id_ingresado, nombre_nuevo, contraseña_nueva)
+   
+
 
 # Pantalla Inicial
 def pantalla_inicial(frame):

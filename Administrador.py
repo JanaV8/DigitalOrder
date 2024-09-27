@@ -9,8 +9,9 @@ cursor = conn.cursor()
 
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS administradores (
+    id INT PRIMARY KEY AUTO_INCREMENT,
     usuario TEXT NOT NULL UNIQUE,
-    contraseña INTEGER PRIMARY KEY 
+    contraseña INTEGER  
 )
 ''')
 
@@ -47,6 +48,7 @@ def eliminarAdministrador(contraseña_ingresada):
     finally:
         conn.close()
 
+#inicio sesion del administrador
 def validarAdministrador (usuarioIngresado,contraseñaIngresado):
     
     cursor.execute('SELECT * FROM administradores WHERE usuario=%s AND contraseña=%s', (usuarioIngresado,contraseñaIngresado))
@@ -59,13 +61,13 @@ def validarAdministrador (usuarioIngresado,contraseñaIngresado):
     else:
         return False           
 
-def actualizarAdministrador (dni_ingresado, nombre_nuevo = None, contraseña_nueva = None):
-    if nombre_nuevo and contraseña_nueva:
-        cursor.execute("UPDATE adinistradores SET usuario = %s AND contraseña = %s WHERE contraseña = %s ", (nombre_nuevo, contraseña_nueva, dni_ingresado))  
+def actualizarAdministrador (id_ingresado, nombre_nuevo = None, contraseña_nueva = None):
+    if nombre_nuevo != None and contraseña_nueva != None:
+        cursor.execute("UPDATE administradores SET usuario = %s, contraseña = %s WHERE id = %s ", (nombre_nuevo, contraseña_nueva, id_ingresado))  
     elif nombre_nuevo:
-        cursor.execute("UPDATE administradores SET usuario = %s WHERE contraseña = %s", (nombre_nuevo, dni_ingresado))
+        cursor.execute("UPDATE administradores SET usuario = %s WHERE id = %s", (nombre_nuevo, id_ingresado))
     elif contraseña_nueva:
-        cursor.execute("UPDATE administradores SET contraseña = %s WHERE contraseña = %s", (contraseña_nueva, dni_ingresado))
+        cursor.execute("UPDATE administradores SET contraseña = %s WHERE id = %s", (contraseña_nueva, id_ingresado))
     else:
         return "No hay valores que actualizar."
     conn.commit()
@@ -83,12 +85,12 @@ def eliminar_plato(self, plato):
     pass
 
 #Funcion para añadir un ingrediente
-#def añadir_ingrediente(self, ingredientes):
-#    pass
+def añadir_ingrediente(self, ingredientes):
+    pass
 
 #Funcion para modificar un ingrediente
-#def modificar_ingrediente(self, ingredientes):
-#    pass
+def modificar_ingrediente(self, ingredientes):
+    pass
 
 #Funcion para eliminar un ingrediente
 def eliminar_ingrediente(self, ingredientes):
