@@ -242,23 +242,19 @@ def pantalla_eliminar_admin(frame):
     ttk.Label(frame, text="Eliminar Administrador", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
-    ttk.Label(frame, text="Usuario:").pack(pady=5)
-    entry_usuario = ttk.Entry(frame)
-    entry_usuario.pack(pady=5)
-    
     ttk.Label(frame, text="Contraseña:").pack(pady=5)
     entry_contraseña = ttk.Entry(frame)
     entry_contraseña.pack(pady=5)
     
 
     ttk.Button(frame, text="Eliminar", style="DarkButton.TButton", 
-               command=lambda: eliminar_admin(entry_usuario.get(),entry_contraseña.get(), frame)).pack(pady=10)
+               command=lambda: eliminar_admin(entry_contraseña.get(), frame)).pack(pady=10)
 
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
-def eliminar_admin(usuario,contraseña, frame):
-    mensaje = Administrador.eliminarAdministrador(usuario,contraseña)
+def eliminar_admin(contraseña, frame):
+    mensaje = Administrador.eliminarAdministrador(contraseña)
     ttk.Label(frame, text=mensaje, foreground="green" if "exitosamente" in mensaje else "red").pack(pady=5)
 
 # Pantalla Inicial
@@ -269,7 +265,7 @@ def pantalla_inicial(frame):
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
      # Cargar la imagen de fondo para el botón
-    fondo_boton = PhotoImage(file="Digital Order\Iconos\Fondo Boton.png")
+    fondo_boton = PhotoImage(file="Iconos\\fondo de boton.png")
 
     # Crear un botón con la imagen de fondo
     tk.Button(frame, text="Seleccionar Mesa", image=fondo_boton, compound="center", 
@@ -295,7 +291,7 @@ def pantalla_principal():
 
 
     pantalla = tk.Tk()
-    pantalla.iconphoto(False, PhotoImage(file='Digital Order\Iconos\DigitalOrder.png'))  # Manteniendo el icono
+    pantalla.iconphoto(False, PhotoImage(file='Iconos\\DigitalOrder.png'))  # Manteniendo el icono
     pantalla.title("Digital Order")
     
     # Centrando la ventana

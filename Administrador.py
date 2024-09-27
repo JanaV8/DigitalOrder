@@ -33,10 +33,10 @@ def agregarAdministrador(usuario,contraseña):
         return 'Usuario existente'
     
 #Eliminamos un administrador de la base de dato     
-def eliminarAdministrador(usuario,contraseña):
+def eliminarAdministrador(contraseña_ingresada):
     try:
         # Eliminar el administrador
-        cursor.execute("DELETE FROM administradores WHERE usuario = %s AND contraseña = %s", (usuario, contraseña))
+        cursor.execute("DELETE FROM administradores WHERE contraseña = %s", (contraseña_ingresada))
         conn.commit()
 
         # Verificar si realmente se eliminó alguna fila
