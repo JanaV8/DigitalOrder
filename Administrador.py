@@ -58,6 +58,17 @@ def validarAdministrador (usuarioIngresado,contraseñaIngresado):
         #Llamamos la funcion para cambiar el GUI
     else:
         return False           
+
+def actualizarAdministrador (dni_ingresado, nombre_nuevo = None, contraseña_nueva = None):
+    if nombre_nuevo and contraseña_nueva:
+        cursor.execute("UPDATE adinistradores SET usuario = %s AND contraseña = %s WHERE contraseña = %s ", (nombre_nuevo, contraseña_nueva, dni_ingresado))  
+    elif nombre_nuevo:
+        cursor.execute("UPDATE administradores SET usuario = %s WHERE contraseña = %s", (nombre_nuevo, dni_ingresado))
+    elif contraseña_nueva:
+        cursor.execute("UPDATE administradores SET contraseña = %s WHERE contraseña = %s", (contraseña_nueva, dni_ingresado))
+    else:
+        return "No hay valores que actualizar."
+    conn.commit()
     
  #Funcion para añadir un plato al menu
 def añadir_plato(self, plato):
