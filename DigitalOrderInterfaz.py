@@ -321,8 +321,7 @@ def pantalla_principal():
     # Código para agregar un administrador por defecto
     usuario_inicial = "AdminPrincipal"
     contraseña_inicial = "1234"
-    mensaje = Administrador.agregarAdministrador(usuario_inicial, contraseña_inicial)
-    print(mensaje)  # Esto imprimirá si el administrador fue agregado correctamente o si ya existe.
+    Administrador.agregarAdministrador(usuario_inicial, contraseña_inicial)
 
 
     pantalla = tk.Tk()

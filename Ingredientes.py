@@ -38,8 +38,8 @@ def mostrar_BD_Ingredientes (id_seleccionado):
 #Funcion para modificar un ingrediente
 def modificar_ingrediente(id_seleccionado, nombre_nuevo = None ,cantidad_nueva = None ):
     
-    if nombre_nuevo and cantidad_nueva:
-        cursor.execute("UPDATE ingredientes SET nombre = %s AND stock = %s WHERE id = %s ", (nombre_nuevo, cantidad_nueva, id_seleccionado))  
+    if nombre_nuevo != None and cantidad_nueva != None:
+        cursor.execute("UPDATE ingredientes SET nombre = %s, stock = %s WHERE id = %s ", (nombre_nuevo, cantidad_nueva, id_seleccionado))  
     elif nombre_nuevo:
         cursor.execute("UPDATE ingredientes SET nombre = %s WHERE id = %s", (nombre_nuevo, id_seleccionado))
     elif cantidad_nueva:
