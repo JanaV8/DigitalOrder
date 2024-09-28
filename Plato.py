@@ -39,3 +39,38 @@ class Plato:
     #Funcion que muestra el estado del pedido
     def __str__(self):
         return f"Plato: {self.nombre}, Estado: {self.estado}"
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Plato_Ingredientes (
+        plato_id INTEGER,
+        ingrediente_id INTEGER,
+        cantidad REAL NOT NULL,
+        FOREIGN KEY (plato_id) REFERENCES Platos (id),
+        FOREIGN KEY (ingrediente_id) REFERENCES Ingredientes (id),
+        PRIMARY KEY (plato_id, ingrediente_id )
+    )
+''')
+
+conn.commit()
+
+def agregar_plato(nombre , descripcion, precio, ingredientes):
+    try:
+        cursor.execute("INSERT INTO platos (nombre, descripcion, precio) VALUES (%s,%s,%s)", (nombre, descripcion, precio))
+        plato_id =cursor.lastrowid
+    
+        # Insertar ingredientes en la tabla de relación
+        for ingrediente_id, cantidad in ingredientes:
+            # Verificar si el ingrediente existe en la base de datos
+            cursor.execute("SELECT id FROM ingredientes WHERE id = %s", (ingrediente_id,))
+            if cursor.fetchone() is not None:  # Solo agregar si el ingrediente existe
+                cursor.execute("INSERT INTO Plato_Ingredientes (plato_id, ingrediente_id, cantidad) VALUES (%s, %s, %s)", (plato_id, ingrediente_id, cantidad))
+            else:
+                return f"Ingrediente con ID {ingrediente_id} no existe. El plato no fue agregado."
+        
+        conn.commit()
+        return "Plato agregado exitosamente."
+    except Exception as e:
+        return f"Ocurrió un error al agregar el plato: {e}"
+
+
+conn.close()

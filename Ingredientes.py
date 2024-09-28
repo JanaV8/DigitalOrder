@@ -32,7 +32,7 @@ def añadir_ingrediente(nombre_ingresado, cantidad_ingresada):
         conn.close()
 #Necesitariamos una funcion en donde mostraria la base de datos al administrador 
 def mostrar_BD_Ingredientes (id_seleccionado):
-    cursor.execute("SELECT id, nombre, stock FROM ingredientes WHEREE id = %s", (id_seleccionado))
+    cursor.execute("SELECT id, nombre, stock FROM ingredientes WHERE id = %s", (id_seleccionado))
     resultado = cursor.fetchall()
     
 #Funcion para modificar un ingrediente
