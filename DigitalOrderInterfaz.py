@@ -2,13 +2,14 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 import Administrador
+import Cliente
 
-# Funcion para limpiar la pantalla (Elimina todos los widgets)
+#Funcion para limpiar la pantalla (Elimina todos los widgets)
 def limpiar_frame(frame):
     for widget in frame.winfo_children():
         widget.destroy()
 
-# Pantalla de Selección de Mesas
+#Pantalla de Selección de Mesas
 def seleccionar_mesa(frame):
     #Limpia la pantalla
     limpiar_frame(frame)
@@ -17,6 +18,7 @@ def seleccionar_mesa(frame):
     ttk.Label(frame, text="Selecciona una mesa:", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
+    #Crea un frame para contener todos los botones de la mesa
     mesas_frame = ttk.Frame(frame, padding="10", style="TFrame")
     mesas_frame.pack(expand=True)
     
@@ -26,10 +28,10 @@ def seleccionar_mesa(frame):
                    command=lambda i=i: mostrar_menu(frame, i)).grid(row=(i-1)//4, column=(i-1)%4, padx=10, pady=10)
 
     #Boton para volver Atras
-    ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
+    ttk.Button(frame, text="Volver", style="DarkButton.TButton",
                command=lambda: pantalla_inicial(frame)).pack(pady=10)
     
-# Pantalla de Menú de Platos
+#Pantalla de Menú de Platos
 def mostrar_menu(frame, mesa_seleccionada):
     #Limpia la Pantalla
     limpiar_frame(frame)
@@ -57,19 +59,32 @@ def mostrar_menu(frame, mesa_seleccionada):
               font=("Helvetica", 14), foreground="#E0E0E0", 
               background="#333333").pack(pady=10)
 
+    #Etiqueta que se actualiza según el total del precio cambie
     ttk.Label(frame, textvariable=total, 
               font=("Helvetica", 14, "bold"), foreground="#E0E0E0", 
               background="#333333").pack(pady=10)
 
+    #Frame para los botones de confirmar, modificar y cancelar pedido
+    botones_frame = ttk.Frame(frame)
+    botones_frame.pack(pady=20)
+
     #Boton para confirmar el pedido
-    ttk.Button(frame, text="Confirmar Pedido", style="DarkButton.TButton", 
-               command=lambda: confirmar_pedido(frame, mesa_seleccionada, total.get())).pack(pady=20)
+    ttk.Button(botones_frame, text="Confirmar Pedido", style="DarkButton.TButton", 
+               command=lambda: confirmar_pedido(frame, mesa_seleccionada, total.get())).pack(side="left", padx=5)
+
+    #Boton para modificar el pedido
+    ttk.Button(botones_frame, text="Modificar Pedido", style="DarkButton.TButton", 
+               command=lambda: modificar_pedido(frame, mesa_seleccionada)).pack(side="left", padx=5)
+
+    #Boton para cancelar el pedido
+    ttk.Button(botones_frame, text="Cancelar Pedido", style="DarkButton.TButton", 
+               command=lambda: cancelar_pedido(frame)).pack(side="left", padx=5)
 
     #Boton para volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: seleccionar_mesa(frame)).pack(pady=10)
 
-#Funcion para confirmar el pedido
+#Funcion para Confirmar el Pedido
 def confirmar_pedido(frame, mesa_seleccionada, total):
     #Limpia la pantalla
     limpiar_frame(frame)
@@ -83,7 +98,21 @@ def confirmar_pedido(frame, mesa_seleccionada, total):
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: pantalla_inicial(frame)).pack(pady=10)
 
-# Pantalla de Inicio de Sesión
+# Función para modificar el pedido
+def modificar_pedido(frame, mesa_seleccionada):
+    # Aquí iría la lógica para modificar el pedido.
+    ttk.Label(frame, text=f"Modificar pedido para la Mesa {mesa_seleccionada}", 
+              font=("Helvetica", 18, "bold"), foreground="#E0E0E0", 
+              background="#333333").pack(pady=20)
+
+# Función para cancelar el pedido
+def cancelar_pedido(frame, mesa_seleccionada):
+    # Aquí iría la lógica para cancelar el pedido.
+    ttk.Label(frame, text=f"Pedido cancelado para la Mesa {mesa_seleccionada}", 
+              font=("Helvetica", 18, "bold"), foreground="#E0E0E0", 
+              background="#333333").pack(pady=20)
+    
+#Pantalla de Inicio de Sesión
 def iniciar_sesion(frame, rol):
     #Limpia la pantalla
     limpiar_frame(frame)
@@ -100,23 +129,29 @@ def iniciar_sesion(frame, rol):
 
     #Etiqueta Contraseña
     ttk.Label(frame, text="Contraseña:").pack(pady=5)
-    
+
+    #Muestra la contraseña si lo requiere el usuario
     entry_contraseña = ttk.Entry(frame, show="*")
     entry_contraseña.pack(pady=5)
 
+    #Boton Mostrar contraseña
     ttk.Button(frame, text="Mostrar Contraseña", style="DarkButton.TButton", 
                command=lambda: mostrar_contraseña(entry_contraseña)).pack(pady=10)
 
-    ttk.Button(frame, text="Iniciar sesión", style="DarkButton.TButton", 
+    #Boton para Iniciar Sesion
+    ttk.Button(frame, text="Iniciar Sesión", style="DarkButton.TButton", 
                command=lambda: confirmar_login(entry_usuario, entry_contraseña, frame)).pack(pady=10)
 
+    #Boton para volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: pantalla_inicial(frame)).pack(pady=10)
 
+#Funcion para Confirmar el Inicio de Sesion
 def confirmar_login(entry_usuario, entry_contraseña, frame):
     usuario = entry_usuario.get()
     contraseña = entry_contraseña.get()
-            
+
+    #Si el usuario y/o contraseña son vacios o son incorrectos se imprimen en la pantalla
     if not usuario or not contraseña:
         ttk.Label(frame, text="Usuario y/o contraseña vacíos", foreground="red").pack(pady=5)
     else:
@@ -126,27 +161,25 @@ def confirmar_login(entry_usuario, entry_contraseña, frame):
         else:
             ttk.Label(frame, text="Usuario y/o contraseña incorrectos", foreground="red").pack(pady=5)
 
-#Funcion para mostrar u ocultar la contraseña
+#Funcion para Mostrar u Ocultar la contraseña
 def mostrar_contraseña(entry):
     if entry.cget("show") == "*":
         entry.config(show="")
     else:
         entry.config(show="*")
 
-#Funcion para mostrar el menu una vez ingreso el administrador
+#Funcion para Mostrar el Menu una vez Ingresa el Administrador
 def mostrar_menu_admin(frame):
+    #Limpia la pantalla
     limpiar_frame(frame)
 
+    #Etiqueta Con el menu del administrador
     ttk.Label(frame, text="Panel de Administración", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
     # Botón para Agregar Administrador
     ttk.Button(frame, text="Agregar Administrador", style="DarkButton.TButton", 
                command=lambda: pantalla_agregar_admin(frame)).pack(pady=10)
-
-    # Botón para Eliminar Administrador
-    ttk.Button(frame, text="Eliminar Administrador", style="DarkButton.TButton", 
-               command=lambda: pantalla_eliminar_admin(frame)).pack(pady=10)
 
     #Boton para modificar datos de administrador
     ttk.Button(frame, text="Modificar Administrador", style="DarkButton.TButton", 
@@ -160,21 +193,24 @@ def mostrar_menu_admin(frame):
     ttk.Button(frame, text="Editar Ingredientes", style="DarkButton.TButton", 
                command=lambda: pantalla_editar_ingredientes(frame)).pack(pady=10)
 
+    #Boton para volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: pantalla_inicial(frame)).pack(pady=10)
 
-# Pantalla para editar el menú
+#Pantalla para Editar el Menú
 def pantalla_editar_menu(frame):
+    #Limpia la Pantalla
     limpiar_frame(frame)
 
+    #Etiqueta para editar el menu (Administrador)
     ttk.Label(frame, text="Editar Menú", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
-    # Botón para Añadir Plato
+    # Botón para Añadir Plato 
     ttk.Button(frame, text="Añadir Plato", style="DarkButton.TButton", 
                command=lambda: Administrador.añadir_plato(frame)).pack(pady=10)
 
-    # Botón para Modificar Plato
+    # Botón para Modificar Plato 
     ttk.Button(frame, text="Modificar Plato", style="DarkButton.TButton", 
                command=lambda: Administrador.modificar_plato(frame)).pack(pady=10)
 
@@ -182,14 +218,16 @@ def pantalla_editar_menu(frame):
     ttk.Button(frame, text="Eliminar Plato", style="DarkButton.TButton", 
                command=lambda: Administrador.eliminar_plato(frame)).pack(pady=10)
 
-    # Botón para Volver al panel de administración
+    # Botón para Volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
-# Pantalla para editar ingredientes
+#Pantalla para Editar Ingredientes
 def pantalla_editar_ingredientes(frame):
+    #Limpia la Pantalla
     limpiar_frame(frame)
 
+    #Etiqueta para editar ingredientes
     ttk.Label(frame, text="Editar Ingredientes", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
@@ -209,10 +247,12 @@ def pantalla_editar_ingredientes(frame):
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
+#Pantalla Agregar Admin
 def pantalla_agregar_admin(frame):
+    #Limpia la pantalla
     limpiar_frame(frame)
 
-    # Título de la pantalla
+    # Etiqueta Agregar un nuevo administrador
     ttk.Label(frame, text="Agregar Nuevo Administrador", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
@@ -234,70 +274,126 @@ def pantalla_agregar_admin(frame):
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
-# Función para agregar administrador
+#Función para Agregar Administrador
 def agregar_admin(usuario, contraseña, frame):
     # Validar que los campos no estén vacíos
     if not usuario or not contraseña:
         ttk.Label(frame, text="Usuario y/o contraseña vacíos", foreground="red").pack(pady=5)
     else:
-        # Intentar agregar al administrador
+        # Etiqueta que muestra se agrega correctamente un administrador
         mensaje = Administrador.agregarAdministrador(usuario, contraseña)
         ttk.Label(frame, text=mensaje, foreground="green" if "Correctamente" in mensaje else "red").pack(pady=5)
 
-def pantalla_eliminar_admin(frame):
-    limpiar_frame(frame)
+#Pantalla para Eliminar un Administrador
+# def pantalla_eliminar_admin(frame):
+#     #Limpia la Pantalla
+#     limpiar_frame(frame)
 
-    ttk.Label(frame, text="Eliminar Administrador", font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+#     #Etiqueta de Eliminar Administrador
+#     ttk.Label(frame, text="Eliminar Administrador", font=("Helvetica", 18, "bold"), 
+#               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
-    ttk.Label(frame, text="Contraseña:").pack(pady=5)
-    entry_contraseña = ttk.Entry(frame)
-    entry_contraseña.pack(pady=5)
+#     #Etiqueta de id
+#     ttk.Label(frame, text="ID:").pack(pady=5)
+#     entry_id = ttk.Entry(frame)
+#     entry_id.pack(pady=5)
     
+#     #Boton Eliminar administrador
+#     ttk.Button(frame, text="Eliminar", style="DarkButton.TButton", 
+#                command=lambda: eliminar_admin(entry_id.get(), frame)).pack(pady=10)
 
-    ttk.Button(frame, text="Eliminar", style="DarkButton.TButton", 
-               command=lambda: eliminar_admin(entry_contraseña.get(), frame)).pack(pady=10)
+#     #Boton de volver atras
+#     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
+#                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
-    ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
-               command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
+#Funcion para Eliminar un Administrador
+def eliminar_admin(id, frame):
+    mensaje = Administrador.eliminarAdministrador(id)
 
-def eliminar_admin(contraseña, frame):
-    mensaje = Administrador.eliminarAdministrador(contraseña)
+    #etiqueta que muestra en color verde que se elimino correctamente
     ttk.Label(frame, text=mensaje, foreground="green" if "exitosamente" in mensaje else "red").pack(pady=5)
 
-#Pantalla para modificar los datos del administrador
+#Pantalla para Modificar los Datos del Administrador
 def pantalla_modificar_admin(frame):
+    #Limpia la pantalla
     limpiar_frame(frame)
     
+    #Etiqueta para Modificar el administrador
     ttk.Label(frame, text="Modificar Administrador", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
     
+    # Crear scrollbar
+    scrollbar = ttk.Scrollbar(frame, orient="vertical")
+
+    # Crear Treeview para mostrar administradores
+    tree = ttk.Treeview(frame, columns=("ID", "Usuario", "Contraseña"), show='headings')
+    tree.heading("ID", text="ID")
+    tree.heading("Usuario", text="Usuario")
+    tree.heading("Contraseña", text="Contraseña")
+    tree.pack(pady=10)
+
+    # Empaquetar el Treeview y el scrollbar uno al lado del otro
+    tree.pack(side="left", fill="both", expand=True, pady=10)
+    scrollbar.pack(side="left", fill="y")
+
+    # Asociar scrollbar al Treeview
+    scrollbar.config(command=tree.yview)
+
+    # Cargar administradores en el Treeview
+    administradores = Administrador.obtener_administradores()
+    for admin in administradores:
+        tree.insert("", "end", values=admin)
+
+    # Función para llenar los campos de entrada al seleccionar un administrador
+    def on_select(event):
+        selected_item = tree.selection()[0]  # Obtiene el item seleccionado
+        id_admin, usuario, contraseña_existente = tree.item(selected_item, "values")
+        id_ingresado.delete(0, tk.END)
+        id_ingresado.insert(0, id_admin)
+        nombre_nuevo.delete(0, tk.END)
+        nombre_nuevo.insert(0, usuario)
+        contraseña_nueva.delete(0, tk.END) 
+        contraseña_nueva.insert(0, contraseña_existente) 
+
+    tree.bind("<<TreeviewSelect>>", on_select)
+
+    #Etiqueta para Ingresar el ID del Administrador
     ttk.Label(frame, text="Ingresar ID:").pack(pady=5)
     id_ingresado = ttk.Entry(frame)
     id_ingresado.pack(pady=5)
     
+    #Etiqueta para ingresar el Nuevo nombre del Administrador
     ttk.Label(frame, text="Ingresar nuevo nombre:").pack(pady=5)
     nombre_nuevo = ttk.Entry(frame)
     nombre_nuevo.pack(pady=5)
     
+    #Etiqueta para ingresar la nueva contraseña del Administrador
     ttk.Label(frame, text="Ingresar nueva contraseña:").pack(pady=5)
     contraseña_nueva = ttk.Entry(frame)
     contraseña_nueva.pack(pady=5)
     
+    #Boton para modificar los datos ingresados
     ttk.Button(frame, text="Modificar", style="DarkButton.TButton", 
                command=lambda: mod_admin(id_ingresado.get(),nombre_nuevo.get(),contraseña_nueva.get())).pack(pady=10)
+    
+    #Boton para eliminar al administrador
+    ttk.Button(frame, text="Eliminar", style="DarkButton.TButton",
+               command=lambda: eliminar_admin(id_ingresado.get(), frame)).pack(pady=10)
 
+    #Boton para volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
-#modificar administrador
+#Funcion para Modificar Administrador
 def mod_admin(id_ingresado, nombre_nuevo, contraseña_nueva):
     Administrador.actualizarAdministrador(id_ingresado, nombre_nuevo, contraseña_nueva)
    
-# Pantalla Inicial
+#Pantalla Inicial
 def pantalla_inicial(frame):
+    #Limpia la patalla
     limpiar_frame(frame)
 
+    #Etiqueta con el titulo de la app
     ttk.Label(frame, text="Digital Order", font=("Helvetica", 24, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
@@ -314,39 +410,52 @@ def pantalla_inicial(frame):
     # Mantener la referencia de la imagen
     frame.image = fondo_boton
 
+    #Boton Iniciar sesion admin
     ttk.Button(frame, text="Iniciar sesión (Admin)", style="DarkButton.TButton", 
                command=lambda: iniciar_sesion(frame, "Admin")).pack(pady=10)
 
+    #Boton iniciar sesion Cocinero
     ttk.Button(frame, text="Iniciar sesión (Cocinero)", style="DarkButton.TButton", 
                command=lambda: iniciar_sesion(frame, "Cocinero")).pack(pady=10)
 
-# Configuración de la ventana principal
+#Configuración de la ventana principal
 def pantalla_principal():
     # Código para agregar un administrador por defecto
     usuario_inicial = "AdminPrincipal"
     contraseña_inicial = "1234"
     Administrador.agregarAdministrador(usuario_inicial, contraseña_inicial)
 
-
+    #Crea la pantalla Princial
     pantalla = tk.Tk()
+
+    #Icono de la aplicacion
     pantalla.iconphoto(False, PhotoImage(file='Digital Order\\Iconos\\DigitalOrder.png'))  
+
+    #Titulo de la app en la pantalla principal
     pantalla.title("Digital Order")
     
-    # Centrando la ventana
-    window_width, window_height = 600, 580
+    #Crea la medida de la ventana
+    window_width, window_height = 700, 680
+
+    #Toma la resolucion de la pantalla donde se ejecuta y aparece en el centro de la pantalla
     screen_width, screen_height = pantalla.winfo_screenwidth(), pantalla.winfo_screenheight()
     position_x, position_y = (screen_width // 2) - (window_width // 2), (screen_height // 2) - (window_height // 2)
     pantalla.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
 
-    # Frame principal y estilo
+    #Crear un marco en la ventana
     frame = ttk.Frame(pantalla, padding="20")
     frame.pack(expand=True, fill="both")
 
+    #Llama a la funcion estilo moderno para que se aplique en la pantalla
     estilo_moderno(frame)
 
+    #Muestra la pantalla incial
     pantalla_inicial(frame)
+
+    #Ejecutar el bucle principal de la aplicación      
     pantalla.mainloop()
 
+#Crea un estilo para aplicar en todas las pantallas
 def estilo_moderno(frame):
     style = ttk.Style()
     style.theme_create("darkmode", parent="alt", settings={
@@ -363,4 +472,5 @@ def estilo_moderno(frame):
     })
     style.theme_use("darkmode")
 
+#Fin de la pantalla
 pantalla_principal()
