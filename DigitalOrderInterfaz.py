@@ -79,6 +79,10 @@ def confirmar_pedido(frame, mesa_seleccionada, total):
     ttk.Label(frame, text=mensaje, font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=20)
 
+    #Boton para volver atras
+    ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
+               command=lambda: pantalla_inicial(frame)).pack(pady=10)
+
 # Pantalla de Inicio de Sesión
 def iniciar_sesion(frame, rol):
     #Limpia la pantalla
@@ -290,8 +294,6 @@ def pantalla_modificar_admin(frame):
 def mod_admin(id_ingresado, nombre_nuevo, contraseña_nueva):
     Administrador.actualizarAdministrador(id_ingresado, nombre_nuevo, contraseña_nueva)
    
-
-
 # Pantalla Inicial
 def pantalla_inicial(frame):
     limpiar_frame(frame)
@@ -299,13 +301,15 @@ def pantalla_inicial(frame):
     ttk.Label(frame, text="Digital Order", font=("Helvetica", 24, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
-     # Cargar la imagen de fondo para el botón
-    fondo_boton = PhotoImage(file="Iconos\\fondo de boton.png")
+    # Fondo para el botón
+    fondo_boton = PhotoImage(file="Digital Order/Iconos/Fondo Boton.png")
 
-    # Crear un botón con la imagen de fondo
-    tk.Button(frame, text="Seleccionar Mesa", image=fondo_boton, compound="center", 
-              font=("Helvetica", 14, "bold"), fg="#E0E0E0", bg="#333333", 
-              command=lambda: seleccionar_mesa(frame)).pack(pady=20)
+    # Botón Seleccionar Mesa
+    tk.Button(frame, text="Seleccionar Mesa", image=fondo_boton, compound="center",
+          font=("Helvetica", 14, "bold"), fg="#E0E0E0", bg="#333333",
+          borderwidth=0, highlightthickness=0,  
+          activebackground="#333333", activeforeground="#E0E0E0", 
+          command=lambda: seleccionar_mesa(frame)).pack(pady=20)
 
     # Mantener la referencia de la imagen
     frame.image = fondo_boton
@@ -325,7 +329,7 @@ def pantalla_principal():
 
 
     pantalla = tk.Tk()
-    pantalla.iconphoto(False, PhotoImage(file='Iconos\\DigitalOrder.png'))  # Manteniendo el icono
+    pantalla.iconphoto(False, PhotoImage(file='Digital Order\\Iconos\\DigitalOrder.png'))  
     pantalla.title("Digital Order")
     
     # Centrando la ventana
