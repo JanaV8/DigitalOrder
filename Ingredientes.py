@@ -4,7 +4,7 @@ conn = pymysql.connect(
         host='26.92.40.13',
         user='root',
         password='',
-        database='plato_bd')
+        database='platos_bd')
 cursor = conn.cursor()
 
 cursor.execute('''
@@ -15,25 +15,27 @@ CREATE TABLE IF NOT EXISTS ingredientes (
     stock REAL NOT NULL
 )
 ''')
-    
+
+class Ingredientes:
+    def __init__(self, id, nombre, stock) :
+        self.id = id 
+        self.nombre = nombre  
+        self.stock = stock
+
 #Funcion para añadir un ingrediente
 def añadir_ingrediente(nombre_ingresado, cantidad_ingresada):
     try:
-        
         cursor.execute('INSERT INTO ingredientes(nombre, stock) VALUES (%s, %s)', (nombre_ingresado, cantidad_ingresada))
         conn.commit()
-        
         #Retornamos un mensaje de exito o de ya existencia dependiendo del caso
         return 'Se agrego el ingrediente correctamente'
     except pymysql.IntegrityError:
-        return 'ingrediente existente existente'
-    finally:
-        # ver si funciona seguramente tendriamosque sacarlo de aca
-        conn.close()
-#Necesitariamos una funcion en donde mostraria la base de datos al administrador 
-def mostrar_BD_Ingredientes (id_seleccionado):
-    cursor.execute("SELECT id, nombre, stock FROM ingredientes WHERE id = %s", (id_seleccionado))
-    resultado = cursor.fetchall()
+        return 'ingrediente inexistente'
+
+def mostrar_BD_Ingredientes ():
+    cursor.execute("SELECT id, nombre, stock FROM ingredientes")
+    Lista_ingredientes = cursor.fetchall()
+    return Lista_ingredientes
     
 #Funcion para modificar un ingrediente
 def modificar_ingrediente(id_seleccionado, nombre_nuevo = None ,cantidad_nueva = None ):

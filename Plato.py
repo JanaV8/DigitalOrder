@@ -4,41 +4,17 @@ conn = pymysql.connect(
         host='26.92.40.13',
         user='root',
         password='',
-        database='plato_bd')
+        database='platos_bd')
 cursor = conn.cursor()
 
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS platos (
-    
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
-    precio REAL NOT NULL
+    precio FLOAT NOT NULL
 )
 ''')
-#Clase plato con sus variables
-class Plato:
-    def __init__(self, nombre, precio, descripcion):
-        self.nombre = nombre
-        self.precio = precio
-        self.ingredientes = []
-        self.descripcion = descripcion
-        self.estado = 'Pendiente'
-    
-    #Funcion para mostrar el menu
-    def mostrarPlatos(self) -> list:
-        return [self.nombre, self.precio, self.ingredientes, self.descripcion]
-    
-    #Funcion para cambiar el estado de un plato (Pendiente y Listo)
-    def cambiar_estado(self):
-        if self.estado == 'Pendiente':
-            self.estado = 'Listo'
-        else:
-            self.estado = 'Pendiente'
-    
-    #Funcion que muestra el estado del pedido
-    def __str__(self):
-        return f"Plato: {self.nombre}, Estado: {self.estado}"
 
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS Plato_Ingredientes (
@@ -53,24 +29,73 @@ cursor.execute('''
 
 conn.commit()
 
-def agregar_plato(nombre , descripcion, precio, ingredientes):
-    try:
-        cursor.execute("INSERT INTO platos (nombre, descripcion, precio) VALUES (%s,%s,%s)", (nombre, descripcion, precio))
-        plato_id =cursor.lastrowid
+def mostrar_platos ():
+    cursor.execute("SELECT id, nombre, descripcion, precio FROM platos")
+    Lista_platos = cursor.fetchall()
+    return Lista_platos
+
+def agregar_plato(nombre, descripcion, precio, ingredientes):
+
+    # Insertar el nuevo plato
+    cursor.execute("INSERT INTO platos (nombre, descripcion, precio) VALUES (%s, %s, %s)", (nombre, descripcion, precio))
+    plato_id = cursor.lastrowid  # Obtener el ID del plato recién agregado
+
+    for nombre_ingrediente, cantidad in ingredientes:
+        # Buscar el ID del ingrediente basado en su nombre
+        cursor.execute("SELECT id FROM ingredientes WHERE nombre = %s", (nombre_ingrediente,))
+        resultado = cursor.fetchone()
+
+        if resultado:  # Si se encontró el ingrediente
+            ingrediente_id = resultado[0]  # Obtener el ID
+            cursor.execute("INSERT INTO Plato_Ingredientes (plato_id, ingrediente_id, cantidad) VALUES (%s, %s, %s)", (plato_id, ingrediente_id, cantidad))
+        else:
+            return f"Ingrediente '{nombre_ingrediente}' no existe. El plato no fue agregado."
+
+    # Confirmar cambios
+    conn.commit()
+    return "Plato agregado exitosamente."
+
+
+def eliminar_plato(plato_id):
+    # Primero, eliminamos los ingredientes asociados
+    cursor.execute("DELETE FROM Plato_Ingredientes WHERE plato_id = %s", (plato_id,))
     
-        # Insertar ingredientes en la tabla de relación
-        for ingrediente_id, cantidad in ingredientes:
-            # Verificar si el ingrediente existe en la base de datos
-            cursor.execute("SELECT id FROM ingredientes WHERE id = %s", (ingrediente_id,))
-            if cursor.fetchone() is not None:  # Solo agregar si el ingrediente existe
-                cursor.execute("INSERT INTO Plato_Ingredientes (plato_id, ingrediente_id, cantidad) VALUES (%s, %s, %s)", (plato_id, ingrediente_id, cantidad))
-            else:
-                return f"Ingrediente con ID {ingrediente_id} no existe. El plato no fue agregado."
-        
+    # Luego, eliminamos el plato
+    cursor.execute("DELETE FROM platos WHERE id = %s", (plato_id,))
+    conn.commit()
+    
+    return "Plato eliminado correctamente." if cursor.rowcount > 0 else "El plato no existe."
+
+def modificar_plato(plato_id, nuevo_nombre=None, nueva_descripcion=None, nuevo_precio=None, nuevos_ingredientes=None):
+    # Actualizar los datos del plato
+    if nuevo_nombre is not None or nueva_descripcion is not None or nuevo_precio is not None:
+        cursor.execute('''
+            UPDATE platos
+            SET nombre = COALESCE(%s, nombre), 
+                descripcion = COALESCE(%s, descripcion), 
+                precio = COALESCE(%s, precio)
+            WHERE id = %s
+        ''', (nuevo_nombre, nueva_descripcion, nuevo_precio, plato_id))
         conn.commit()
-        return "Plato agregado exitosamente."
-    except Exception as e:
-        return f"Ocurrió un error al agregar el plato: {e}"
 
+    # Actualizar los ingredientes
+    if nuevos_ingredientes is not None:
+        # Primero eliminamos los ingredientes existentes
+        cursor.execute('DELETE FROM Plato_Ingredientes WHERE plato_id = %s', (plato_id,))
+        
+        # Luego insertamos los nuevos ingredientes solo si se proporcionan
+        if nuevos_ingredientes:  # Verifica si hay nuevos ingredientes
+            for nombre_ingrediente, cantidad in nuevos_ingredientes:
+                # Busca el ID del ingrediente
+                cursor.execute("SELECT id FROM ingredientes WHERE nombre = %s", (nombre_ingrediente,))
+                resultado = cursor.fetchone()
 
-conn.close()
+                if resultado:  # Si se encontró el ingrediente
+                    ingrediente_id = resultado[0]
+                    cursor.execute('INSERT INTO Plato_Ingredientes (plato_id, ingrediente_id, cantidad) VALUES (%s, %s, %s)', (plato_id, ingrediente_id, cantidad))
+                else:
+                    return f"Ingrediente '{nombre_ingrediente}' no existe. No se ha agregado al plato."
+
+        conn.commit()
+
+    return "Plato modificado exitosamente."

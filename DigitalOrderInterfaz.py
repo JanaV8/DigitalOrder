@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 import Administrador
-import Cliente
+import Ingredientes
+import Plato
 
 #Funcion para limpiar la pantalla (Elimina todos los widgets)
 def limpiar_frame(frame):
@@ -199,49 +200,175 @@ def mostrar_menu_admin(frame):
 
 #Pantalla para Editar el Menú
 def pantalla_editar_menu(frame):
-    #Limpia la Pantalla
+    # Limpia la Pantalla
     limpiar_frame(frame)
 
-    #Etiqueta para editar el menu (Administrador)
+    # Etiqueta para editar el menu (Administrador)
     ttk.Label(frame, text="Editar Menú", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
+    # Crear scrollbar
+    scrollbar = ttk.Scrollbar(frame, orient="vertical")
+
+    # Crear Treeview para mostrar platos
+    tree = ttk.Treeview(frame, columns=("ID", "Nombre", "Descripcion", "Precio"), show='headings')
+    tree.heading("ID", text="ID")
+    tree.heading("Nombre", text="Nombre")
+    tree.heading("Descripcion", text="Descripcion")
+    tree.heading("Precio", text="Precio")
+
+    # Empaquetar el Treeview y el scrollbar uno al lado del otro
+    tree.pack(side="left", fill="both", expand=True, pady=10)
+    scrollbar.pack(side="left", fill="y")
+
+    # Asociar scrollbar al Treeview
+    scrollbar.config(command=tree.yview)
+
+    # Cargar platos en el Treeview
+    Lista_platos = Plato.mostrar_platos()
+    for b_platos in Lista_platos:
+        tree.insert("", "end", values=b_platos)
+
+    # Función para llenar los campos de entrada al seleccionar un plato
+    def on_select(event):
+        selected_item = tree.selection()[0]  # Obtiene el item seleccionado
+        id_pl = tree.item(selected_item, "values")[0]
+        nombre_pl = tree.item(selected_item, "values")[1]
+        descripcion_pl = tree.item(selected_item, "values")[2]
+        precio_pl = tree.item(selected_item, "values")[3]
+
+        id.delete(0, tk.END)
+        id.insert(0, id_pl)
+        nombre.delete(0, tk.END)
+        nombre.insert(0, nombre_pl)
+        descripcion.delete(0, tk.END) 
+        descripcion.insert(0, descripcion_pl)
+        precio.delete(0, tk.END)
+        precio.insert(0, precio_pl)
+
+    tree.bind("<<TreeviewSelect>>", on_select)
+
+    # Etiquetas y campos de entrada
+    ttk.Label(frame, text="ID:").pack(pady=5)
+    id = ttk.Entry(frame)
+    id.pack(pady=5)
+
+    ttk.Label(frame, text="Nombre:").pack(pady=5)
+    nombre = ttk.Entry(frame)
+    nombre.pack(pady=5)
+
+    ttk.Label(frame, text="Descripcion:").pack(pady=5)
+    descripcion = ttk.Entry(frame)
+    descripcion.pack(pady=5)
+
+    ttk.Label(frame, text="Precio:").pack(pady=5)
+    precio = ttk.Entry(frame)
+    precio.pack(pady=5)
+
+    # Etiqueta y campo para ingresar ingredientes
+    ttk.Label(frame, text="Ingredientes (nombre,cantidad):").pack(pady=5)
+    ingredientes = ttk.Entry(frame)
+    ingredientes.pack(pady=5)
+
     # Botón para Añadir Plato 
     ttk.Button(frame, text="Añadir Plato", style="DarkButton.TButton", 
-               command=lambda: Administrador.añadir_plato(frame)).pack(pady=10)
+               command=lambda: agregar_plato(nombre.get(), descripcion.get(), precio.get(), ingredientes.get())).pack(pady=10)
 
     # Botón para Modificar Plato 
     ttk.Button(frame, text="Modificar Plato", style="DarkButton.TButton", 
-               command=lambda: Administrador.modificar_plato(frame)).pack(pady=10)
+               command=lambda: Plato.modificar_plato(id.get() or None, nombre.get() or None, descripcion.get() or None, precio.get() or None, ingredientes.get() or None)).pack(pady=10)
 
     # Botón para Eliminar Plato
     ttk.Button(frame, text="Eliminar Plato", style="DarkButton.TButton", 
-               command=lambda: Administrador.eliminar_plato(frame)).pack(pady=10)
+               command=lambda: Plato.eliminar_plato(id.get())).pack(pady=10)
 
     # Botón para Volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
+def agregar_plato(nombre, descripcion, precio, ingredientes_str):
+    # Convertir el string de ingredientes a una lista de tuplas
+    ingredientes = []
+    for ing in ingredientes_str.split(","):
+        nombre_ingrediente, cantidad = ing.split(":")  # Asegúrate de usar un formato consistente
+        ingredientes.append((nombre_ingrediente.strip(), float(cantidad.strip())))  # Convertir a float
+
+    resultado = Plato.agregar_plato(nombre, descripcion, precio, ingredientes)
+    return resultado
+
+
 #Pantalla para Editar Ingredientes
 def pantalla_editar_ingredientes(frame):
-    #Limpia la Pantalla
+    # Limpia la Pantalla
     limpiar_frame(frame)
 
-    #Etiqueta para editar ingredientes
+    # Etiqueta Editar ingredientes
     ttk.Label(frame, text="Editar Ingredientes", font=("Helvetica", 18, "bold"), 
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
+    # Crear scrollbar
+    scrollbar = ttk.Scrollbar(frame, orient="vertical")
+
+    # Crear Treeview para mostrar ingredientes
+    tree = ttk.Treeview(frame, columns=("ID", "Nombre", "Stock"), show='headings')
+    tree.heading("ID", text="ID")
+    tree.heading("Nombre", text="Nombre")
+    tree.heading("Stock", text="Stock")
+
+    # Empaquetar el Treeview y el scrollbar uno al lado del otro
+    tree.pack(side="left", fill="both", expand=True, pady=10)
+    scrollbar.pack(side="left", fill="y")
+
+    # Asociar scrollbar al Treeview
+    scrollbar.config(command=tree.yview)
+
+    # Cargar ingredientes en el Treeview
+    Lista_ingredientes = Ingredientes.mostrar_BD_Ingredientes()
+    for b_ingrediente in Lista_ingredientes:
+        tree.insert("", "end", values=b_ingrediente)
+
+    # Función para llenar los campos de entrada al seleccionar un ingrediente
+    def on_select(event):
+        selected_item = tree.selection()[0]  # Obtiene el item seleccionado
+        id_ing = tree.item(selected_item, "values")[0]
+        nombre_ing = tree.item(selected_item, "values")[1]
+        stock_ing = tree.item(selected_item, "values")[2]
+
+        id.delete(0, tk.END)
+        id.insert(0, id_ing)
+        nombre.delete(0, tk.END)
+        nombre.insert(0, nombre_ing)
+        cantidad.delete(0, tk.END) 
+        cantidad.insert(0, stock_ing)
+
+    tree.bind("<<TreeviewSelect>>", on_select)
+
+     # Etiqueta de ID ingrediente
+    ttk.Label(frame, text="ID:").pack(pady=5)
+    id = ttk.Entry(frame)
+    id.pack(pady=5)
+
+    # Etiqueta de Nombre ingrediente
+    ttk.Label(frame, text="Nombre:").pack(pady=5)
+    nombre = ttk.Entry(frame)
+    nombre.pack(pady=5)
+
+    # Etiqueta de Stock ingrediente
+    ttk.Label(frame, text="Cantidad:").pack(pady=5)
+    cantidad = ttk.Entry(frame)
+    cantidad.pack(pady=5)
+
     # Botón para Añadir Ingrediente
     ttk.Button(frame, text="Añadir Ingrediente", style="DarkButton.TButton", 
-               command=lambda: Administrador.añadir_ingrediente(frame)).pack(pady=10)
+               command=lambda: Ingredientes.añadir_ingrediente(nombre.get(), cantidad.get())).pack(pady=10)
 
     # Botón para Modificar Ingrediente
     ttk.Button(frame, text="Modificar Ingrediente", style="DarkButton.TButton", 
-               command=lambda: Administrador.modificar_ingrediente(frame)).pack(pady=10)
+               command=lambda: Ingredientes.modificar_ingrediente(id.get(), nombre.get(), cantidad.get())).pack(pady=10)
 
     # Botón para Eliminar Ingrediente
     ttk.Button(frame, text="Eliminar Ingrediente", style="DarkButton.TButton", 
-               command=lambda: Administrador.eliminar_ingrediente(frame)).pack(pady=10)
+               command=lambda: Ingredientes.eliminar_ingrediente(id.get())).pack(pady=10)
 
     # Botón para Volver al panel de administración
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
@@ -283,28 +410,6 @@ def agregar_admin(usuario, contraseña, frame):
         # Etiqueta que muestra se agrega correctamente un administrador
         mensaje = Administrador.agregarAdministrador(usuario, contraseña)
         ttk.Label(frame, text=mensaje, foreground="green" if "Correctamente" in mensaje else "red").pack(pady=5)
-
-#Pantalla para Eliminar un Administrador
-# def pantalla_eliminar_admin(frame):
-#     #Limpia la Pantalla
-#     limpiar_frame(frame)
-
-#     #Etiqueta de Eliminar Administrador
-#     ttk.Label(frame, text="Eliminar Administrador", font=("Helvetica", 18, "bold"), 
-#               foreground="#E0E0E0", background="#333333").pack(pady=10)
-
-#     #Etiqueta de id
-#     ttk.Label(frame, text="ID:").pack(pady=5)
-#     entry_id = ttk.Entry(frame)
-#     entry_id.pack(pady=5)
-    
-#     #Boton Eliminar administrador
-#     ttk.Button(frame, text="Eliminar", style="DarkButton.TButton", 
-#                command=lambda: eliminar_admin(entry_id.get(), frame)).pack(pady=10)
-
-#     #Boton de volver atras
-#     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
-#                command=lambda: mostrar_menu_admin(frame)).pack(pady=10)
 
 #Funcion para Eliminar un Administrador
 def eliminar_admin(id, frame):
@@ -398,7 +503,7 @@ def pantalla_inicial(frame):
               foreground="#E0E0E0", background="#333333").pack(pady=10)
 
     # Fondo para el botón
-    fondo_boton = PhotoImage(file="Digital Order/Iconos/Fondo Boton.png")
+    fondo_boton = PhotoImage(file="Iconos\\Fondo Boton.png")
 
     # Botón Seleccionar Mesa
     tk.Button(frame, text="Seleccionar Mesa", image=fondo_boton, compound="center",
@@ -429,7 +534,7 @@ def pantalla_principal():
     pantalla = tk.Tk()
 
     #Icono de la aplicacion
-    pantalla.iconphoto(False, PhotoImage(file='Digital Order\\Iconos\\DigitalOrder.png'))  
+    pantalla.iconphoto(False, PhotoImage(file='Iconos\\DigitalOrder.png'))  
 
     #Titulo de la app en la pantalla principal
     pantalla.title("Digital Order")
