@@ -1,9 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
+from PIL import Image, ImageTk
 import Administrador
 import Ingredientes
 import Plato
+import Pedido
+
 
 #Funcion para limpiar la pantalla (Elimina todos los widgets)
 def limpiar_frame(frame):
@@ -17,7 +20,7 @@ def seleccionar_mesa(frame):
     
     #Etiqueta de seleccion de mesa
     ttk.Label(frame, text="Selecciona una mesa:", font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+              foreground="#000000", background="#d9b5a9").pack(pady=10)
 
     #Crea un frame para contener todos los botones de la mesa
     mesas_frame = ttk.Frame(frame, padding="10", style="TFrame")
@@ -27,92 +30,64 @@ def seleccionar_mesa(frame):
     for i in range(1, 21):
         ttk.Button(mesas_frame, text=f"Mesa {i}", style="DarkButton.TButton", 
                    command=lambda i=i: mostrar_menu(frame, i)).grid(row=(i-1)//4, column=(i-1)%4, padx=10, pady=10)
+        
 
     #Boton para volver Atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton",
                command=lambda: pantalla_inicial(frame)).pack(pady=10)
     
-#Pantalla de Menú de Platos
 def mostrar_menu(frame, mesa_seleccionada):
-    #Limpia la Pantalla
+    # Limpia la Pantalla
     limpiar_frame(frame)
-
-    #Etiqueta del menu para la mesa seleccionada
+    
+    # Crea el carrito para el pedido
+    pedido_id = Pedido.crear_carrito()
+    
+    # Etiqueta del menu para la mesa seleccionada
     ttk.Label(frame, text=f"Menú para la Mesa {mesa_seleccionada}", 
-              font=("Helvetica", 18, "bold"), foreground="#E0E0E0", 
-              background="#333333").pack(pady=10)
+              font=("Helvetica", 18, "bold"), foreground="#000000", 
+              background="#d9b5a9").pack(pady=10)
 
-    #Creacion de Menu (Provicional)
-    platos = [("Empanada", 700), ("Pancho", 4000), ("Pizza", 8000), 
-              ("Choripan", 6000), ("Hamburguesa", 7000)]
-    total = tk.DoubleVar(value=0.0)
+    # Botón para ver el carrito
+    ttk.Button(frame, text="Carrito", 
+           command=lambda: mostrar_carrito_interfaz(frame, pedido_id,mesa_seleccionada)).pack(pady=10)  # Cambia la llamada aquí
 
-    #Funcion para agregar Platos a la orden
-    def agregar_plato(precio):
-        total.set(total.get() + precio)
-    for plato, precio in platos:
-        ttk.Button(frame, text=f"{plato} - ${precio:.2f}", 
-                   style="DarkButton.TButton", 
-                   command=lambda p=precio: agregar_plato(p)).pack(pady=5, padx=10, fill='x')
+    # Menú de platos
+    platos = Plato.mostrar_platos()
+    for idx, (plato_id, nombre, descripcion, precio) in enumerate(platos):
+        ttk.Label(frame, text=f"{nombre} - {descripcion} - ${precio}").pack()  # Cambia grid() por pack()
+        ttk.Button(frame, text="Agregar al carrito", 
+           command=lambda p_id=plato_id: Pedido.agregar_al_carrito(pedido_id, p_id, 1)).pack()  # Cambia grid() por pack()
 
-    #Etiqueta con el precio total del pedido
-    ttk.Label(frame, text="Total de su Pedido:", 
-              font=("Helvetica", 14), foreground="#E0E0E0", 
-              background="#333333").pack(pady=10)
-
-    #Etiqueta que se actualiza según el total del precio cambie
-    ttk.Label(frame, textvariable=total, 
-              font=("Helvetica", 14, "bold"), foreground="#E0E0E0", 
-              background="#333333").pack(pady=10)
-
-    #Frame para los botones de confirmar, modificar y cancelar pedido
-    botones_frame = ttk.Frame(frame)
-    botones_frame.pack(pady=20)
-
-    #Boton para confirmar el pedido
-    ttk.Button(botones_frame, text="Confirmar Pedido", style="DarkButton.TButton", 
-               command=lambda: confirmar_pedido(frame, mesa_seleccionada, total.get())).pack(side="left", padx=5)
-
-    #Boton para modificar el pedido
-    ttk.Button(botones_frame, text="Modificar Pedido", style="DarkButton.TButton", 
-               command=lambda: modificar_pedido(frame, mesa_seleccionada)).pack(side="left", padx=5)
-
-    #Boton para cancelar el pedido
-    ttk.Button(botones_frame, text="Cancelar Pedido", style="DarkButton.TButton", 
-               command=lambda: cancelar_pedido(frame)).pack(side="left", padx=5)
-
-    #Boton para volver atras
+    # Botón para volver atrás
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
                command=lambda: seleccionar_mesa(frame)).pack(pady=10)
 
-#Funcion para Confirmar el Pedido
-def confirmar_pedido(frame, mesa_seleccionada, total):
-    #Limpia la pantalla
+
+
+def mostrar_carrito_interfaz(frame, pedido_id,mesa_seleccionada):
+    # Limpia la pantalla
     limpiar_frame(frame)
 
-    #Muestra por pantalla el pedido confirmado para la mesa y su total
-    mensaje = f"Pedido confirmado para la Mesa {mesa_seleccionada}, Total: ${total:.2f}"
-    ttk.Label(frame, text=mensaje, font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=20)
+    # Etiqueta para mostrar el carrito
+    ttk.Label(frame, text="Carrito", font=("Helvetica", 18, "bold")).pack(pady=10)
 
-    #Boton para volver atras
-    ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
-               command=lambda: pantalla_inicial(frame)).pack(pady=10)
+    # Obtener los elementos del carrito
+    items = Pedido.mostrar_carrito(pedido_id)
 
-# Función para modificar el pedido
-def modificar_pedido(frame, mesa_seleccionada):
-    # Aquí iría la lógica para modificar el pedido.
-    ttk.Label(frame, text=f"Modificar pedido para la Mesa {mesa_seleccionada}", 
-              font=("Helvetica", 18, "bold"), foreground="#E0E0E0", 
-              background="#333333").pack(pady=20)
+    # Mostrar los elementos en el carrito
+    for plato_id, nombre, precio, cantidad in items:
+        ttk.Label(frame, text=f"{nombre} - ${precio} x {cantidad}").pack(pady=5)
+        
+        # Aquí 'plato_id' ya está definido desde la consulta
+        ttk.Button(frame, text="Eliminar", command=lambda p_id=plato_id: Pedido.eliminar_del_carrito(pedido_id, p_id)).pack(pady=5)
 
-# Función para cancelar el pedido
-def cancelar_pedido(frame, mesa_seleccionada):
-    # Aquí iría la lógica para cancelar el pedido.
-    ttk.Label(frame, text=f"Pedido cancelado para la Mesa {mesa_seleccionada}", 
-              font=("Helvetica", 18, "bold"), foreground="#E0E0E0", 
-              background="#333333").pack(pady=20)
+    # Botón para confirmar el pedido
+    ttk.Button(frame, text="Confirmar Pedido", command=lambda: Pedido.confirmar_pedido(pedido_id,mesa_seleccionada)).pack(pady=10)
     
+    # Botón para volver
+    ttk.Button(frame, text="Volver", command=lambda: mostrar_menu(frame, -1)).pack(pady=10)
+
 #Pantalla de Inicio de Sesión
 def iniciar_sesion(frame, rol):
     #Limpia la pantalla
@@ -176,7 +151,7 @@ def mostrar_menu_admin(frame):
 
     #Etiqueta Con el menu del administrador
     ttk.Label(frame, text="Panel de Administración", font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+              foreground="#000000", background="#d9b5a9").pack(pady=10)
 
     # Botón para Agregar Administrador
     ttk.Button(frame, text="Agregar Administrador", style="DarkButton.TButton", 
@@ -205,13 +180,14 @@ def pantalla_editar_menu(frame):
 
     # Etiqueta para editar el menu (Administrador)
     ttk.Label(frame, text="Editar Menú", font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+              foreground="#000000", background="#d9b5a9").pack(pady=10)
 
     # Crear scrollbar
     scrollbar = ttk.Scrollbar(frame, orient="vertical")
 
     # Crear Treeview para mostrar platos
     tree = ttk.Treeview(frame, columns=("ID", "Nombre", "Descripcion", "Precio"), show='headings')
+    style_treeview(tree)
     tree.heading("ID", text="ID")
     tree.heading("Nombre", text="Nombre")
     tree.heading("Descripcion", text="Descripcion")
@@ -272,15 +248,18 @@ def pantalla_editar_menu(frame):
 
     # Botón para Añadir Plato 
     ttk.Button(frame, text="Añadir Plato", style="DarkButton.TButton", 
-               command=lambda: agregar_plato(nombre.get(), descripcion.get(), precio.get(), ingredientes.get())).pack(pady=10)
+               command=lambda: [agregar_plato(nombre.get(), descripcion.get(), precio.get(), ingredientes.get()), 
+                            actualizar_treeview(tree,Plato.mostrar_platos)]).pack(pady=10)
 
     # Botón para Modificar Plato 
     ttk.Button(frame, text="Modificar Plato", style="DarkButton.TButton", 
-               command=lambda: Plato.modificar_plato(id.get() or None, nombre.get() or None, descripcion.get() or None, precio.get() or None, ingredientes.get() or None)).pack(pady=10)
+               command=lambda: [Plato.modificar_plato(id.get() or None, nombre.get() or None, descripcion.get() or None, precio.get() or None, ingredientes.get() or None), 
+                            actualizar_treeview(tree,Plato.mostrar_platos)]).pack(pady=10)
 
     # Botón para Eliminar Plato
     ttk.Button(frame, text="Eliminar Plato", style="DarkButton.TButton", 
-               command=lambda: Plato.eliminar_plato(id.get())).pack(pady=10)
+               command=lambda: [Plato.eliminar_plato(id.get()), 
+                            actualizar_treeview(tree,Plato.mostrar_platos)]).pack(pady=10)
 
     # Botón para Volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
@@ -296,7 +275,6 @@ def agregar_plato(nombre, descripcion, precio, ingredientes_str):
     resultado = Plato.agregar_plato(nombre, descripcion, precio, ingredientes)
     return resultado
 
-
 #Pantalla para Editar Ingredientes
 def pantalla_editar_ingredientes(frame):
     # Limpia la Pantalla
@@ -304,13 +282,14 @@ def pantalla_editar_ingredientes(frame):
 
     # Etiqueta Editar ingredientes
     ttk.Label(frame, text="Editar Ingredientes", font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+              foreground="#000000", background="#d9b5a9").pack(pady=10)
 
     # Crear scrollbar
     scrollbar = ttk.Scrollbar(frame, orient="vertical")
 
     # Crear Treeview para mostrar ingredientes
     tree = ttk.Treeview(frame, columns=("ID", "Nombre", "Stock"), show='headings')
+    style_treeview(tree)
     tree.heading("ID", text="ID")
     tree.heading("Nombre", text="Nombre")
     tree.heading("Stock", text="Stock")
@@ -360,15 +339,18 @@ def pantalla_editar_ingredientes(frame):
 
     # Botón para Añadir Ingrediente
     ttk.Button(frame, text="Añadir Ingrediente", style="DarkButton.TButton", 
-               command=lambda: Ingredientes.añadir_ingrediente(nombre.get(), cantidad.get())).pack(pady=10)
+               command=lambda: [Ingredientes.añadir_ingrediente(nombre.get(), cantidad.get()),
+                                actualizar_treeview(tree, Ingredientes.mostrar_BD_Ingredientes)]).pack(pady=10)
 
     # Botón para Modificar Ingrediente
     ttk.Button(frame, text="Modificar Ingrediente", style="DarkButton.TButton", 
-               command=lambda: Ingredientes.modificar_ingrediente(id.get(), nombre.get(), cantidad.get())).pack(pady=10)
+               command=lambda: [Ingredientes.modificar_ingrediente(id.get(), nombre.get(), cantidad.get()),
+                                actualizar_treeview(tree, Ingredientes.mostrar_BD_Ingredientes)]).pack(pady=10)
 
     # Botón para Eliminar Ingrediente
     ttk.Button(frame, text="Eliminar Ingrediente", style="DarkButton.TButton", 
-               command=lambda: Ingredientes.eliminar_ingrediente(id.get())).pack(pady=10)
+               command=lambda: [Ingredientes.eliminar_ingrediente(id.get()),
+                                actualizar_treeview(tree, Ingredientes.mostrar_BD_Ingredientes)]).pack(pady=10)
 
     # Botón para Volver al panel de administración
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
@@ -381,7 +363,7 @@ def pantalla_agregar_admin(frame):
 
     # Etiqueta Agregar un nuevo administrador
     ttk.Label(frame, text="Agregar Nuevo Administrador", font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+              foreground="#000000", background="#d9b5a9").pack(pady=10)
 
     # Etiqueta de Usuario
     ttk.Label(frame, text="Usuario:").pack(pady=5)
@@ -425,13 +407,14 @@ def pantalla_modificar_admin(frame):
     
     #Etiqueta para Modificar el administrador
     ttk.Label(frame, text="Modificar Administrador", font=("Helvetica", 18, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+              foreground="#000000", background="#d9b5a9").pack(pady=10)
     
     # Crear scrollbar
     scrollbar = ttk.Scrollbar(frame, orient="vertical")
 
     # Crear Treeview para mostrar administradores
     tree = ttk.Treeview(frame, columns=("ID", "Usuario", "Contraseña"), show='headings')
+    style_treeview(tree)
     tree.heading("ID", text="ID")
     tree.heading("Usuario", text="Usuario")
     tree.heading("Contraseña", text="Contraseña")
@@ -479,11 +462,13 @@ def pantalla_modificar_admin(frame):
     
     #Boton para modificar los datos ingresados
     ttk.Button(frame, text="Modificar", style="DarkButton.TButton", 
-               command=lambda: mod_admin(id_ingresado.get(),nombre_nuevo.get(),contraseña_nueva.get())).pack(pady=10)
+               command=lambda: [mod_admin(id_ingresado.get(), nombre_nuevo.get(), contraseña_nueva.get()), 
+                            actualizar_treeview(tree, Administrador.obtener_administradores)]).pack(pady=10)
     
     #Boton para eliminar al administrador
     ttk.Button(frame, text="Eliminar", style="DarkButton.TButton",
-               command=lambda: eliminar_admin(id_ingresado.get(), frame)).pack(pady=10)
+               command=lambda: [eliminar_admin(id_ingresado.get(), frame),
+                                actualizar_treeview(tree, Administrador.obtener_administradores)]).pack(pady=10)
 
     #Boton para volver atras
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
@@ -500,28 +485,43 @@ def pantalla_inicial(frame):
 
     #Etiqueta con el titulo de la app
     ttk.Label(frame, text="Digital Order", font=("Helvetica", 24, "bold"), 
-              foreground="#E0E0E0", background="#333333").pack(pady=10)
+              foreground="#000000", background="#d9b5a9").pack(pady=10)
 
     # Fondo para el botón
     fondo_boton = PhotoImage(file="Iconos\\Fondo Boton.png")
 
     # Botón Seleccionar Mesa
     tk.Button(frame, text="Seleccionar Mesa", image=fondo_boton, compound="center",
-          font=("Helvetica", 14, "bold"), fg="#E0E0E0", bg="#333333",
+          font=("Helvetica", 13, "bold"), fg="#ffffff", bg="#d9b5a9",
           borderwidth=0, highlightthickness=0,  
-          activebackground="#333333", activeforeground="#E0E0E0", 
-          command=lambda: seleccionar_mesa(frame)).pack(pady=20)
+          activebackground="#d9b5a9", activeforeground="#000000", 
+          command=lambda: seleccionar_mesa(frame)).pack(pady=10)
 
-    # Mantener la referencia de la imagen
+    # Botón Iniciar sesión (Admin)
+    tk.Button(frame, text="Iniciar sesión Admin", image=fondo_boton, compound="center",
+              font=("Helvetica", 13, "bold"), fg="#ffffff", bg="#d9b5a9",
+              borderwidth=0, highlightthickness=0,
+              activebackground="#d9b5a9", activeforeground="#000000", 
+              command=lambda: iniciar_sesion(frame, "Admin")).pack(pady=10)
+
+    # Botón Iniciar sesión (Cocinero)
+    tk.Button(frame, text="Iniciar sesión Cocinero", image=fondo_boton, compound="center",
+              font=("Helvetica", 11, "bold"), fg="#ffffff", bg="#d9b5a9",
+              borderwidth=0, highlightthickness=0,
+              activebackground="#d9b5a9", activeforeground="#000000", 
+              command=lambda: iniciar_sesion(frame, "Cocinero")).pack(pady=10)
+
+   # Cargar la imagen y redimensionarla
+    imagen_original = Image.open("Iconos\\Chef.png")
+    imagen_redimensionada = imagen_original.resize((300, 300), Image.LANCZOS)  # Cambia el tamaño aquí
+    imagen_final = ImageTk.PhotoImage(imagen_redimensionada)
+
+    # Crear un label para mostrar la imagen redimensionada
+    ttk.Label(frame, image=imagen_final, background="#d9b5a9").pack(pady=20)
+
+    # Mantener la referencia de las imágenes
     frame.image = fondo_boton
-
-    #Boton Iniciar sesion admin
-    ttk.Button(frame, text="Iniciar sesión (Admin)", style="DarkButton.TButton", 
-               command=lambda: iniciar_sesion(frame, "Admin")).pack(pady=10)
-
-    #Boton iniciar sesion Cocinero
-    ttk.Button(frame, text="Iniciar sesión (Cocinero)", style="DarkButton.TButton", 
-               command=lambda: iniciar_sesion(frame, "Cocinero")).pack(pady=10)
+    frame.imagen_final = imagen_final
 
 #Configuración de la ventana principal
 def pantalla_principal():
@@ -560,22 +560,57 @@ def pantalla_principal():
     #Ejecutar el bucle principal de la aplicación      
     pantalla.mainloop()
 
+#Funcion para actualizar el TreeView
+def actualizar_treeview(tree, obtener_datos_func):
+    # Limpiar Treeview
+    for item in tree.get_children():
+        tree.delete(item)
+    # Obtener nuevos datos y actualizar el Treeview
+    datos = obtener_datos_func()
+    for dato in datos:
+        tree.insert("", "end", values=dato)
+
 #Crea un estilo para aplicar en todas las pantallas
 def estilo_moderno(frame):
     style = ttk.Style()
     style.theme_create("darkmode", parent="alt", settings={
-        "TLabel": {"configure": {"font": ("Helvetica", 14), "background": "#333333", "foreground": "#E0E0E0"}},
-        "DarkButton.TButton": {
-            "configure": {"font": ("Helvetica", 14), "padding": (10, 5), "relief": "flat", 
-                          "background": "#444444", "foreground": "#E0E0E0", "borderwidth": 0},
+        "TLabel": {
+            "configure": {"font": ("Calibri", 14), "background": "#d9b5a9", "foreground": "#000000"}
+        },
+        "ModernButton.TButton": {
+            "configure": {"font": ("Calibri", 16), "padding": (15, 10), "relief": "flat", 
+                          "background": "#8C6A58", "foreground": "#ffffff", "borderwidth": 0},
             "map": {
-                "background": [("active", "#555555"), ("pressed", "#222222")],
-                "foreground": [("active", "#E0E0E0"), ("pressed", "#E0E0E0")]
+                "background": [("active", "#b48776"), ("pressed", "#754f3e")],
+                "foreground": [("active", "#ffffff"), ("pressed", "#ffffff")]
             }
         },
-        "TFrame": {"configure": {"background": "#333333"}}
+        "TFrame": {"configure": {"background": "#d9b5a9"}}
     })
     style.theme_use("darkmode")
+
+#Crea estilo para el TreeView
+def style_treeview(tree):
+    style = ttk.Style()
+    style.configure("Treeview",
+                    background="#F5F5DC",  # Fondo del Treeview
+                    foreground="#333333",  # Color del texto
+                    rowheight=25,
+                    fieldbackground="#F5F5DC")  # Fondo de las celdas
+
+    style.map("Treeview",
+              background=[("selected", "#007FFF")],  # Color cuando seleccionas
+              foreground=[("selected", "#FFFFFF")])  # Color del texto cuando seleccionas
+
+    # Estilo para los encabezados
+    style.configure("Treeview.Heading",
+                    background="#FFA500",  # Fondo naranja para encabezados
+                    foreground="#FFFFFF",  # Texto blanco
+                    font=("Helvetica", 13, "bold"))
+
+    # Estilos para filas alternas
+    style.configure("evenrow", background="#E6E6FA")  # Lavanda para filas pares
+    style.configure("oddrow", background="#FFFFFF")    # Blanco para filas impares
 
 #Fin de la pantalla
 pantalla_principal()

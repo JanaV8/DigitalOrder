@@ -34,6 +34,12 @@ def mostrar_platos ():
     Lista_platos = cursor.fetchall()
     return Lista_platos
 
+#Funcion para mostrar el menu al cliente
+def mostrar_menu ():
+    cursor.execute("SELECT nombre, descripcion, precio FROM platos")
+    Lista_menu = cursor.fetchall()
+    return Lista_menu
+
 def agregar_plato(nombre, descripcion, precio, ingredientes):
 
     # Insertar el nuevo plato
