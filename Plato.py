@@ -33,7 +33,6 @@ def mostrar_platos ():
     cursor.execute("SELECT id, nombre, descripcion, precio FROM platos")
     Lista_platos = cursor.fetchall()
     return Lista_platos
-
 #Funcion para mostrar el menu al cliente
 def mostrar_menu ():
     cursor.execute("SELECT nombre, descripcion, precio FROM platos")
@@ -60,7 +59,6 @@ def agregar_plato(nombre, descripcion, precio, ingredientes):
     # Confirmar cambios
     conn.commit()
     return "Plato agregado exitosamente."
-
 
 def eliminar_plato(plato_id):
     # Primero, eliminamos los ingredientes asociados

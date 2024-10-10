@@ -24,7 +24,7 @@ class Administrador:
         self.contraseña = contraseña
 
 #Funcion para Agregar un Administrador
-def agregarAdministrador(usuario,contraseña):
+def agregar_administrador(usuario,contraseña):
     try:
         cursor.execute('INSERT INTO administradores(usuario, contraseña) VALUES (%s, %s)', (usuario, contraseña))
         conn.commit()
@@ -35,7 +35,7 @@ def agregarAdministrador(usuario,contraseña):
         return 'Usuario existente'
     
 #Funcion para Eliminar un Administrador     
-def eliminarAdministrador(id_ingresada):
+def eliminar_administrador(id_ingresada):
         cursor.execute("DELETE FROM administradores WHERE id = %s", (id_ingresada))
         conn.commit()
 
@@ -46,7 +46,7 @@ def eliminarAdministrador(id_ingresada):
             return "El administrador no existe."
 
 #Funcion para Validar un Administrador
-def validarAdministrador (usuarioIngresado,contraseñaIngresado):
+def validar_administrador (usuarioIngresado,contraseñaIngresado):
     
     cursor.execute('SELECT * FROM administradores WHERE usuario=%s AND contraseña=%s', (usuarioIngresado,contraseñaIngresado))
     resultado =cursor.fetchone()
@@ -59,7 +59,7 @@ def validarAdministrador (usuarioIngresado,contraseñaIngresado):
         return False           
 
 #Funcion para Actualizar los Datos del Administrador
-def actualizarAdministrador (id_ingresado, nombre_nuevo = None, contraseña_nueva = None):
+def actualizar_administrador (id_ingresado, nombre_nuevo = None, contraseña_nueva = None):
     if nombre_nuevo != None and contraseña_nueva != None:
         cursor.execute("UPDATE administradores SET usuario = %s, contraseña = %s WHERE id = %s ", (nombre_nuevo, contraseña_nueva, id_ingresado))  
     elif nombre_nuevo:

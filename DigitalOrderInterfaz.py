@@ -55,9 +55,9 @@ def mostrar_menu(frame, mesa_seleccionada):
     # Menú de platos
     platos = Plato.mostrar_platos()
     for idx, (plato_id, nombre, descripcion, precio) in enumerate(platos):
-        ttk.Label(frame, text=f"{nombre} - {descripcion} - ${precio}").pack()  # Cambia grid() por pack()
+        ttk.Label(frame, text=f"{nombre} - {descripcion} - ${precio}").pack()  
         ttk.Button(frame, text="Agregar al carrito", 
-           command=lambda p_id=plato_id: Pedido.agregar_al_carrito(pedido_id, p_id, 1)).pack()  # Cambia grid() por pack()
+           command=lambda p_id=plato_id: Pedido.agregar_al_carrito(pedido_id, p_id, 1)).pack()  
 
     # Botón para volver atrás
     ttk.Button(frame, text="Volver", style="DarkButton.TButton", 
@@ -65,7 +65,7 @@ def mostrar_menu(frame, mesa_seleccionada):
 
 
 
-def mostrar_carrito_interfaz(frame, pedido_id,mesa_seleccionada):
+def mostrar_carrito_interfaz(frame, pedido_id, mesa_seleccionada):
     # Limpia la pantalla
     limpiar_frame(frame)
 
@@ -78,15 +78,23 @@ def mostrar_carrito_interfaz(frame, pedido_id,mesa_seleccionada):
     # Mostrar los elementos en el carrito
     for plato_id, nombre, precio, cantidad in items:
         ttk.Label(frame, text=f"{nombre} - ${precio} x {cantidad}").pack(pady=5)
-        
-        # Aquí 'plato_id' ya está definido desde la consulta
-        ttk.Button(frame, text="Eliminar", command=lambda p_id=plato_id: Pedido.eliminar_del_carrito(pedido_id, p_id)).pack(pady=5)
+      
+        ttk.Button(frame, text="+", 
+                   command=lambda p_id=plato_id, c=cantidad: [Pedido.aumentar_cantidad(c, pedido_id, p_id), mostrar_carrito_interfaz(frame, pedido_id, mesa_seleccionada)]).pack(pady=5)
+      
+        ttk.Button(frame, text="-", 
+                   command=lambda p_id=plato_id, c=cantidad: [Pedido.reducir_cantidad(c, pedido_id, p_id), mostrar_carrito_interfaz(frame, pedido_id, mesa_seleccionada)]).pack(pady=5)
+      
+        ttk.Button(frame, text="Eliminar", 
+                   command=lambda p_id=plato_id: [Pedido.eliminar_del_carrito(pedido_id, p_id), mostrar_carrito_interfaz(frame, pedido_id, mesa_seleccionada)]).pack(pady=5)
 
     # Botón para confirmar el pedido
-    ttk.Button(frame, text="Confirmar Pedido", command=lambda: Pedido.confirmar_pedido(pedido_id,mesa_seleccionada)).pack(pady=10)
-    
+    ttk.Button(frame, text="Confirmar Pedido", 
+               command=lambda: [Pedido.confirmar_pedido(pedido_id, mesa_seleccionada), mostrar_menu(frame, mesa_seleccionada)]).pack(pady=10)
+
     # Botón para volver
     ttk.Button(frame, text="Volver", command=lambda: mostrar_menu(frame, -1)).pack(pady=10)
+
 
 #Pantalla de Inicio de Sesión
 def iniciar_sesion(frame, rol):

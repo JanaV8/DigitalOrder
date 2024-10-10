@@ -50,7 +50,7 @@ def modificar_ingrediente(id_seleccionado, nombre_nuevo = None ,cantidad_nueva =
         return "No hay valores que actualizar."
     conn.commit()
 
-def eliminar_ingrediente(id_seleccionado):
+def eliminar_ingrediente(id_seleccionado):  
     try:
         # Eliminar el ingrediente
         cursor.execute("DELETE FROM ingredientes WHERE id = %s", (id_seleccionado))
