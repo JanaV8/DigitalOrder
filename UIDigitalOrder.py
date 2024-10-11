@@ -632,7 +632,7 @@ def editar_menu(frame):
     # Crear tabla con QTableWidget
     table = QtWidgets.QTableWidget()
     table.setColumnCount(5)
-    table.setHorizontalHeaderLabels(["ID","Nombre", "Descipcion", "Precio", "Ingredientes"])
+    table.setHorizontalHeaderLabels(["ID","Nombre", "Descipcion", "Precio","Ingredientes"])
     table.verticalHeader().setVisible(False)
     table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
@@ -690,12 +690,15 @@ def editar_menu(frame):
     precio_nuevo.setStyleSheet("background-color: white;")
     input_layout.addWidget(precio_nuevo, alignment=Qt.AlignCenter)
 
-    label_ingredientes = QLabel("Ingredientes\n(nombre:cantidad)")
+    label_ingredientes = QLabel("Ingredientes")
     label_ingredientes.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_ingredientes, alignment=Qt.AlignCenter)
+
     ingredientes_nuevo = QtWidgets.QLineEdit()
     ingredientes_nuevo.setStyleSheet("background-color: white;")
+    ingredientes_nuevo.setPlaceholderText("Ejemplo: tomate,2; lechuga,1; cebolla,3")  # Placeholder
     input_layout.addWidget(ingredientes_nuevo, alignment=Qt.AlignCenter)
+
 
     # Añadir el layout de inputs al layout principal
     main_layout.addLayout(input_layout)
@@ -717,7 +720,7 @@ def editar_menu(frame):
             nombre_nuevo.setText(selected[1].text())
             descripcion_nueva.setText(selected[2].text())
             precio_nuevo.setText(selected[3].text())
-            #ingredientes_nuevo.setText(selected[4].text())
+            ingredientes_nuevo.setText(selected[4].text())
 
     table.itemSelectionChanged.connect(on_select)
 
@@ -726,17 +729,17 @@ def editar_menu(frame):
 
     # Botón para Añadir platos
     btn_añadir = diseño_boton("Añadir Plato")
-    btn_añadir.clicked.connect(lambda: Plato.agregar_plato(nombre_nuevo.text(), descripcion_nueva.text(), precio_nuevo.text(), ingredientes_nuevo.text()))               
+    btn_añadir.clicked.connect(lambda: [Plato.agregar_plato(nombre_nuevo.text(), descripcion_nueva.text(), precio_nuevo.text(), ingredientes_nuevo.text()),actualizar_tabla(table,Plato.mostrar_platos)])               
     button_layout.addWidget(btn_añadir)
 
     #Boton para Modificar el Plato
     btn_modificar = diseño_boton("Modificar Plato")
-    btn_modificar.clicked.connect(lambda: Plato.modificar_plato(nombre_nuevo.text(), descripcion_nueva.text(), precio_nuevo.text(), ingredientes_nuevo.text()))
+    btn_modificar.clicked.connect(lambda: [Plato.modificar_plato(id_ingresado.text(),nombre_nuevo.text(), descripcion_nueva.text(), precio_nuevo.text(), ingredientes_nuevo.text()),actualizar_tabla(table,Plato.mostrar_platos)])
     button_layout.addWidget(btn_modificar)
 
     # Botón para eliminar
     btn_eliminar = diseño_boton("Eliminar Plato")
-    btn_eliminar.clicked.connect(lambda: Plato.eliminar_plato(id_ingresado.text()))
+    btn_eliminar.clicked.connect(lambda: [Plato.eliminar_plato(id_ingresado.text()),actualizar_tabla(table,Plato.mostrar_platos)])
     button_layout.addWidget(btn_eliminar)
 
     # Botón para volver

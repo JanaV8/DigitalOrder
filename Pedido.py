@@ -11,15 +11,6 @@ conn = pymysql.connect(
 cursor = conn.cursor()
 
 # Crear las tablas si no existen
-# Crear la tabla 'pedido'
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS pedido (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    numeroMesa INT UNIQUE NOT NULL,
-    precioFinal INTEGER NOT NULL
-)
-''')
-
 # Crear la tabla 'platos'
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS platos (
@@ -30,7 +21,16 @@ CREATE TABLE IF NOT EXISTS platos (
 )
 ''')
 
-# Crear la tabla 'Pedido_Plato'
+# Crear la tabla 'pedido'
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS pedido (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    numeroMesa INT UNIQUE NOT NULL,
+    precioFinal INTEGER NOT NULL
+)
+''')
+
+#Crear la tabla 'Pedido_Plato'
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS Pedido_Plato (
     pedido_id INT,

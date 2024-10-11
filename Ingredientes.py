@@ -32,7 +32,7 @@ def añadir_ingrediente(nombre_ingresado, cantidad_ingresada):
     except pymysql.IntegrityError:
         return 'ingrediente inexistente'
 
-def mostrar_BD_Ingredientes ():
+def mostrar_bd_Ingredientes ():
     cursor.execute("SELECT id, nombre, stock FROM ingredientes")
     Lista_ingredientes = cursor.fetchall()
     return Lista_ingredientes
