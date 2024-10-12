@@ -45,17 +45,19 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
 conn.commit()
 
 # Funcionalidad para que el cliente pueda guardar el pedido
-def agregar_al_carrito(pedido_id, plato_id, cantidad):
-    cursor.execute("SELECT cantidad FROM Pedido_Plato WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
-    resultado = cursor.fetchone()
-    
-    if resultado:
-        nueva_cantidad = resultado[0] + cantidad
-        cursor.execute("UPDATE Pedido_Plato SET cantidad=%s WHERE pedido_id=%s AND plato_id=%s", (nueva_cantidad, pedido_id, plato_id))
-    else:
-        cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
-    
-    conn.commit()
+def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
+            # Obtener el ID del plato según su nombre
+        cursor.execute("SELECT id FROM platos WHERE nombre = %s", (nombre_plato,))
+        resultado = cursor.fetchone()
+            
+        if resultado:
+            plato_id = resultado[0]  # Obtener la ID del plato
+            # Ahora puedes insertar en la tabla Pedido_Plato
+            cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)",
+                           (pedido_id, plato_id, cantidad))
+            print("Plato agregado al carrito.")
+        else:
+            print("Plato no encontrado en la base de datos.")
 
 def confirmar_pedido(pedido_id, numero_mesa):
     # Calcular el precio final sumando los precios de los platos en el pedido

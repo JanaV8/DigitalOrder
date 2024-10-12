@@ -49,10 +49,6 @@ def mostrar_menu ():
     Lista_menu = cursor.fetchall()
     return Lista_menu
 
-def mostrar_ingredientes ():
-    cursor.execute("SELECT nombre,cantidad WHERE ingrediente_id FROM ingredientes")
-    Lista_menu = cursor.fetchall()
-    return Lista_menu
 
 def agregar_plato(nombre, descripcion, precio, ingredientes_str):
     # Insertar el nuevo plato

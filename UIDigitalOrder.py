@@ -114,18 +114,16 @@ def mostrar_menu(frame, mesa):
     frame.addWidget(etiqueta_menu)
 
     # Crear el QListWidget para mostrar los platos
-    lista_platos = QListWidget()
-    frame.addWidget(lista_platos)
+    lista_menu = QListWidget()
+    frame.addWidget(lista_menu)
 
-    #Muestra la base de datos de Platos
-    platos = Plato.mostrar_menu()
+    # Muestra la base de datos de Platos
+    platos = Plato.mostrar_menu()  # Esto asumo que devuelve una lista de tuplas (nombre, descripcion, precio)
 
     # Función para crear un widget personalizado para cada plato
     def item_personalizado(nombre, descripcion, precio):
         widget = QWidget()
         layout = QVBoxLayout()
-
-        # Ajustar el espaciado entre los elementos
         layout.setSpacing(5)
 
         # Crear y personalizar la etiqueta del nombre
@@ -153,15 +151,15 @@ def mostrar_menu(frame, mesa):
 
         return widget
 
-    # Cargar los platos en el QListWidget 
+    # Cargar los platos en el QListWidget
     for nombre, descripcion, precio in platos:
-        item = QListWidgetItem(lista_platos)  # Crear item vacío
+        item = QListWidgetItem(lista_menu)  # Crear item vacío
         widget_personalizado = item_personalizado(nombre, descripcion, precio)
-        lista_platos.setItemWidget(item, widget_personalizado)
+        lista_menu.setItemWidget(item, widget_personalizado)
         item.setSizeHint(widget_personalizado.sizeHint())
 
-        # Aplicar el estilo hover al QListWidgetItem
-    lista_platos.setStyleSheet("""
+    # Aplicar el estilo hover al QListWidgetItem
+    lista_menu.setStyleSheet("""
         QListWidget::item {
             padding: 1px; /* Espaciado */
         }
@@ -182,31 +180,31 @@ def mostrar_menu(frame, mesa):
 
     # Crea el carrito para el pedido
     pedido_id = Pedido.crear_carrito()
-
+    
     # Función para actualizar el total al hacer clic en un plato
     def plato_seleccionado(item):
         nonlocal total_pedido  # Hacer que total_pedido sea accesible
-        row = lista_platos.row(item)  # Obtener el índice de la fila seleccionada
+        row = lista_menu.row(item)  # Obtener el índice de la fila seleccionada
         precio = platos[row][2]  # Obtener el precio del plato seleccionado
         total_pedido += precio  # Sumar el precio al total
         etiqueta_total.setText(f"Total de su Pedido: ${total_pedido:.2f}")
         
-        # Agregar el plato al carrito en la base de datos
-        plato_id = row + 1  
+        nombre_plato = platos[row][0]  # Obtener el nombre del plato seleccionado
         cantidad = 1  # Por defecto, agregar uno de cada plato seleccionado
-        Pedido.agregar_al_carrito(pedido_id, plato_id, cantidad)
-
+        
+        print(f"Pedido ID: {pedido_id}, Plato: {nombre_plato}, Cantidad: {cantidad}")
+        Pedido.agregar_al_carrito(pedido_id, nombre_plato, cantidad)  # Llama a agregar_al_carrito con nombre
 
     # Conectar la señal de clic de la lista
-    lista_platos.itemClicked.connect(plato_seleccionado)
+    lista_menu.itemClicked.connect(plato_seleccionado)
 
     # Botón para confirmar el pedido
     boton_confirmar = diseño_boton("Confirmar Pedido")
     boton_confirmar.clicked.connect(lambda: [Pedido.confirmar_pedido(pedido_id, mesa), pedido_confirmado(frame)])
     frame.addWidget(boton_confirmar, alignment=Qt.AlignCenter)
 
-    #Boton para ver el carrito
-    boton_carrito =diseño_boton("Carrito")
+    # Botón para ver el carrito
+    boton_carrito = diseño_boton("Carrito")
     boton_carrito.clicked.connect(lambda: mostrar_carrito(frame, mesa, pedido_id))
     frame.addWidget(boton_carrito, alignment=Qt.AlignCenter)
 
@@ -214,6 +212,7 @@ def mostrar_menu(frame, mesa):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: seleccionar_mesa(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
 
 #Pantalla Pedido Confirmado
 def pedido_confirmado(frame):
@@ -696,7 +695,7 @@ def editar_menu(frame):
 
     ingredientes_nuevo = QtWidgets.QLineEdit()
     ingredientes_nuevo.setStyleSheet("background-color: white;")
-    ingredientes_nuevo.setPlaceholderText("Ejemplo: tomate,2; lechuga,1; cebolla,3")  # Placeholder
+    ingredientes_nuevo.setPlaceholderText("Ejemplo: tomate,2; lechuga,1; cebolla,3")  
     input_layout.addWidget(ingredientes_nuevo, alignment=Qt.AlignCenter)
 
 
