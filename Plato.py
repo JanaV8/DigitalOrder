@@ -33,7 +33,7 @@ def mostrar_platos():
     # Consulta para obtener los platos junto con sus ingredientes y cantidades
     query = """
         SELECT p.id, p.nombre, p.descripcion, p.precio, 
-               GROUP_CONCAT(CONCAT(i.nombre, ' (', pi.cantidad, ')') SEPARATOR ', ') AS ingredientes
+               GROUP_CONCAT(CONCAT(i.nombre, ' ,', pi.cantidad, '') SEPARATOR ', ') AS ingredientes
         FROM platos p
         LEFT JOIN Plato_Ingredientes pi ON p.id = pi.plato_id
         LEFT JOIN ingredientes i ON pi.ingrediente_id = i.id

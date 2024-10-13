@@ -11,7 +11,7 @@ conn = pymysql.connect(
 cursor = conn.cursor()
 
 # Crear las tablas si no existen
-# Crear la tabla 'platos'
+# Crear la tabla Platos
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS platos (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS platos (
 )
 ''')
 
-# Crear la tabla 'pedido'
+# Crear la tabla Pedidos
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS pedido (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS pedido (
 )
 ''')
 
-#Crear la tabla 'Pedido_Plato'
+#Crear la tabla Pedido_Plato
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS Pedido_Plato (
     pedido_id INT,
@@ -44,21 +44,33 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
 
 conn.commit()
 
-# Funcionalidad para que el cliente pueda guardar el pedido
+# Funcion para agregar un plato al carrito
 def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
-            # Obtener el ID del plato según su nombre
+        #Busca la id del plato mediante su nombre
         cursor.execute("SELECT id FROM platos WHERE nombre = %s", (nombre_plato,))
         resultado = cursor.fetchone()
-            
+
         if resultado:
-            plato_id = resultado[0]  # Obtener la ID del plato
-            # Ahora puedes insertar en la tabla Pedido_Plato
-            cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)",
-                           (pedido_id, plato_id, cantidad))
-            print("Plato agregado al carrito.")
+            # Obtener la ID del plato
+            plato_id = resultado[0]  
+            
+            # Verificar si el plato ya está en el carrito
+            cursor.execute("SELECT cantidad FROM Pedido_Plato WHERE pedido_id = %s AND plato_id = %s", (pedido_id, plato_id))
+            resultado_carrito = cursor.fetchone()
+
+            if resultado_carrito:
+                # Si ya está en el carrito, actualizar la cantidad
+                nueva_cantidad = resultado_carrito[0] + cantidad
+                cursor.execute("UPDATE Pedido_Plato SET cantidad = %s WHERE pedido_id = %s AND plato_id = %s", (nueva_cantidad, pedido_id, plato_id))
+            else:
+                # Si no está en el carrito, insertar el plato
+                cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
+
+            print("Plato agregado o actualizado en el carrito.")
         else:
             print("Plato no encontrado en la base de datos.")
 
+#Funcion para confirmar el pedido del carrito
 def confirmar_pedido(pedido_id, numero_mesa):
     # Calcular el precio final sumando los precios de los platos en el pedido
     cursor.execute(""" 
@@ -69,7 +81,8 @@ def confirmar_pedido(pedido_id, numero_mesa):
     """, (pedido_id,))
     
     resultado = cursor.fetchone()
-    precio_final = resultado[0] if resultado else 0  # Si no hay platos, precio_final será 0
+    # Si no hay platos, precio_final será 0
+    precio_final = resultado[0] if resultado else 0  
 
     # Obtener los ingredientes requeridos y sus cantidades para el pedido actual
     cursor.execute("""
@@ -82,7 +95,7 @@ def confirmar_pedido(pedido_id, numero_mesa):
     
     ingredientes_requeridos = cursor.fetchall()
 
-    # Validar que haya suficiente stock para cada ingrediente
+    # Valida que haya suficiente stock para cada ingrediente
     for ingrediente_id, cantidad_requerida in ingredientes_requeridos:
         cursor.execute("SELECT stock FROM ingredientes WHERE id = %s", (ingrediente_id,))
         stock_actual = cursor.fetchone()[0]
@@ -90,21 +103,23 @@ def confirmar_pedido(pedido_id, numero_mesa):
         if stock_actual < cantidad_requerida:
             return f"No hay suficiente stock para el ingrediente ID {ingrediente_id}. Pedido no confirmado."
 
-    # Si hay suficiente stock, restar los ingredientes
+    # Si hay suficiente stock, resta los ingredientes
     for ingrediente_id, cantidad_requerida in ingredientes_requeridos:
         cursor.execute("UPDATE ingredientes SET stock = stock - %s WHERE id = %s", (cantidad_requerida, ingrediente_id))
 
-    # Actualizar el pedido con el número de mesa y el precio final
+    # Actualiza el pedido con el número de mesa y el precio final
     cursor.execute("UPDATE pedido SET numeroMesa=%s, precioFinal=%s WHERE id=%s", (numero_mesa, precio_final, pedido_id))
-    conn.commit()  # Guardar los cambios en la base de datos
+    conn.commit() 
     
     return "Pedido confirmado y stock actualizado correctamente."
 
-
+#Funcion que crea el carrito
 def crear_carrito():
+    #Pone en -1 el numeroMesa para crear un carrito temporal
     cursor.execute("SELECT id FROM pedido WHERE numeroMesa = -1")
     resultado = cursor.fetchone()
 
+    #Verifica que exista un carrito temporal, sino existe uno lo crea 
     if resultado:
         return resultado[0]
     else:
@@ -112,10 +127,12 @@ def crear_carrito():
         conn.commit()
         return cursor.lastrowid
 
+#Funcion para eliminar un plato del carrito
 def eliminar_del_carrito(pedido_id, plato_id):
     cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
     conn.commit()
 
+#Funcion para mostrar la informacio de los platos que se agregaron al carrito 
 def mostrar_carrito(pedido_id):
     cursor = conn.cursor()
     cursor.execute("""
@@ -126,8 +143,8 @@ def mostrar_carrito(pedido_id):
     """, (pedido_id,))
     return cursor.fetchall() 
 
+#Funcion para reducir la cantidad de un plato dento del carrito, si la cantidad llega a 0 lo elimina 
 def reducir_cantidad(cantidad_exitente, pedido_id, plato_id):
-    # variable para reducir el valor ,teniendo la posiblidad de modificar el valor si es necesario,
     if cantidad_exitente > 0:
         reducir = 1
         nueva_cantidad = cantidad_exitente - reducir
@@ -140,8 +157,8 @@ def reducir_cantidad(cantidad_exitente, pedido_id, plato_id):
                            (nueva_cantidad, pedido_id, plato_id))
              conn.commit()
 
+#Funcion para aumentar la cantidad de un plato dento del carrito
 def aumentar_cantidad(cantidad_exitente, pedido_id, plato_id):
-    #Variable a modificar
     aumentar = 1 
     nueva_cantidad = cantidad_exitente + aumentar
     cursor.execute("UPDATE Pedido_Plato SET cantidad=%s WHERE pedido_id=%s AND plato_id=%s", 
