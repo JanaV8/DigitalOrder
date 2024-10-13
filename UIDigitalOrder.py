@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QLabel, QPushButton, QVBoxLayout, QApplication, QMainWindow, QWidget, QGridLayout, QLineEdit, QListWidgetItem, QListWidget,QHBoxLayout, QListView)
+from PyQt5.QtWidgets import (QLabel, QPushButton, QVBoxLayout, QApplication, QMainWindow, QWidget, QGridLayout, QLineEdit, QListWidgetItem, QListWidget,QHBoxLayout)
 from PyQt5.QtGui import QFont, QPixmap, QIcon
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
@@ -18,7 +18,7 @@ def limpiar_pantalla(contenedor):
         elif child.layout():
             limpiar_pantalla(child.layout())
 
-# Estlo predeterminado botones con fondo png
+# Estilo predeterminado botones con fondo png
 def diseño_boton(texto, tamaño=14):
     boton = QPushButton(texto)
     boton.setFont(QFont("Helvetica", tamaño, QFont.Bold))
@@ -29,9 +29,10 @@ def diseño_boton(texto, tamaño=14):
 
 # Pantalla Inicial
 def pantalla_inicial(frame):
-    # Limpiar el layout
+    # Limpia la pantalla
     limpiar_pantalla(frame)
 
+    #logo de la app
     logo_label = QLabel()
     pixmap = QPixmap("Iconos\\Digital Order Logo.png")
     pixmap_redimensionado = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -39,7 +40,7 @@ def pantalla_inicial(frame):
     logo_label.setAlignment(Qt.AlignCenter)
     frame.addWidget(logo_label)
 
-    # Crear y agregar el botón Seleccionar Mesa
+    # Botón Seleccionar Mesa
     boton_mesa = diseño_boton("Seleccionar \n Mesa")
     boton_mesa.clicked.connect(lambda: seleccionar_mesa(frame))
     frame.addWidget(boton_mesa, alignment=Qt.AlignCenter)
@@ -49,12 +50,12 @@ def pantalla_inicial(frame):
     boton_admin.clicked.connect(lambda: iniciar_sesion(frame))
     frame.addWidget(boton_admin, alignment=Qt.AlignCenter)
 
-    # Botón Iniciar sesión (Cocinero)
+    # Botón Iniciar sesión Cocinero
     boton_cocinero = diseño_boton("Iniciar Sesión \n Cocinero")
     boton_cocinero.clicked.connect(lambda: Cocinero.iniciar_sesion(frame, "Cocinero"))
     frame.addWidget(boton_cocinero,alignment=Qt.AlignCenter)
 
-    # Carga la imagen y la redimensiona
+    # Carga la imagen de Chef y la redimensiona
     imagen_label = QLabel()
     pixmap = QPixmap("Iconos\\Chef.png")
     pixmap_redimensionado = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -78,7 +79,7 @@ def seleccionar_mesa(frame):
     grid_layout = QGridLayout()
     frame.addLayout(grid_layout)
 
-    # # Crea 20 mesas
+    # Crea 20 mesas
     for i in range(1, 21):
          boton_mesa = QPushButton(f"Mesa {i}")
          boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))  
@@ -102,7 +103,7 @@ def seleccionar_mesa(frame):
     boton_volver.clicked.connect(lambda: pantalla_inicial(frame))
     frame.addWidget(boton_volver,alignment=Qt.AlignCenter)
 
-# Pantalla de Menú de Platos con QListWidget
+# Pantalla de Menú de Platos 
 def mostrar_menu(frame, mesa):
     limpiar_pantalla(frame)
 
@@ -113,30 +114,32 @@ def mostrar_menu(frame, mesa):
     etiqueta_menu.setAlignment(Qt.AlignCenter)
     frame.addWidget(etiqueta_menu)
 
-    # Crear el QListWidget para mostrar los platos
-    lista_menu = QListWidget()
-    frame.addWidget(lista_menu)
+    # Crear una lista para mostrar los platos
+    lista_platos = QListWidget()
+    frame.addWidget(lista_platos)
 
-    # Muestra la base de datos de Platos
-    platos = Plato.mostrar_menu()  # Esto asumo que devuelve una lista de tuplas (nombre, descripcion, precio)
+    #Muestra la base de datos de Platos
+    platos = Plato.mostrar_menu()
 
     # Función para crear un widget personalizado para cada plato
     def item_personalizado(nombre, descripcion, precio):
         widget = QWidget()
         layout = QVBoxLayout()
+
+        # Ajustar el espaciado entre los elementos
         layout.setSpacing(5)
 
-        # Crear y personalizar la etiqueta del nombre
+        # Etiqueta del nombre del plato
         label_nombre = QLabel(nombre)
         label_nombre.setFont(QFont("Helvetica", 14, QFont.Bold))
         label_nombre.setStyleSheet("color: #0a0a0a;")
 
-        # Crear y personalizar la etiqueta de la descripción
+        # Etiqueta de la descripción del plato
         label_descripcion = QLabel(descripcion)
         label_descripcion.setFont(QFont("Arial", 10))
         label_descripcion.setStyleSheet("color: #555555;")
 
-        # Crear y personalizar la etiqueta del precio
+        # Etiqueta del precio del plato
         label_precio = QLabel(f"${precio:.2f}")
         label_precio.setFont(QFont("Helvetica", 11))
         label_precio.setStyleSheet("color: #008f39;")
@@ -151,15 +154,15 @@ def mostrar_menu(frame, mesa):
 
         return widget
 
-    # Cargar los platos en el QListWidget
+    # Cargar los platos a la lista
     for nombre, descripcion, precio in platos:
-        item = QListWidgetItem(lista_menu)  # Crear item vacío
+        item = QListWidgetItem(lista_platos)  
         widget_personalizado = item_personalizado(nombre, descripcion, precio)
-        lista_menu.setItemWidget(item, widget_personalizado)
+        lista_platos.setItemWidget(item, widget_personalizado)
         item.setSizeHint(widget_personalizado.sizeHint())
 
-    # Aplicar el estilo hover al QListWidgetItem
-    lista_menu.setStyleSheet("""
+    # Aplica el estilo hover a la lista
+    lista_platos.setStyleSheet("""
         QListWidget::item {
             padding: 1px; /* Espaciado */
         }
@@ -180,31 +183,30 @@ def mostrar_menu(frame, mesa):
 
     # Crea el carrito para el pedido
     pedido_id = Pedido.crear_carrito()
-    
+
     # Función para actualizar el total al hacer clic en un plato
     def plato_seleccionado(item):
-        nonlocal total_pedido  # Hacer que total_pedido sea accesible
-        row = lista_menu.row(item)  # Obtener el índice de la fila seleccionada
-        precio = platos[row][2]  # Obtener el precio del plato seleccionado
-        total_pedido += precio  # Sumar el precio al total
+        nonlocal total_pedido  
+        row = lista_platos.row(item)  # Obtiene el índice de la fila seleccionada
+        precio = platos[row][2]  # Obtiene el precio del plato seleccionado
+        plato_id = platos[row][0]
+        total_pedido += precio  # Suma el precio al total
         etiqueta_total.setText(f"Total de su Pedido: ${total_pedido:.2f}")
         
-        nombre_plato = platos[row][0]  # Obtener el nombre del plato seleccionado
-        cantidad = 1  # Por defecto, agregar uno de cada plato seleccionado
-        
-        print(f"Pedido ID: {pedido_id}, Plato: {nombre_plato}, Cantidad: {cantidad}")
-        Pedido.agregar_al_carrito(pedido_id, nombre_plato, cantidad)  # Llama a agregar_al_carrito con nombre
+        # Agrega el plato al carrito
+        cantidad = 1 
+        Pedido.agregar_al_carrito(pedido_id, plato_id, cantidad)
 
-    # Conectar la señal de clic de la lista
-    lista_menu.itemClicked.connect(plato_seleccionado)
+    # Conecta la señal de clic de la lista
+    lista_platos.itemClicked.connect(plato_seleccionado)
 
     # Botón para confirmar el pedido
     boton_confirmar = diseño_boton("Confirmar Pedido")
     boton_confirmar.clicked.connect(lambda: [Pedido.confirmar_pedido(pedido_id, mesa), pedido_confirmado(frame)])
     frame.addWidget(boton_confirmar, alignment=Qt.AlignCenter)
 
-    # Botón para ver el carrito
-    boton_carrito = diseño_boton("Carrito")
+    #Boton para ver el carrito
+    boton_carrito =diseño_boton("Carrito")
     boton_carrito.clicked.connect(lambda: mostrar_carrito(frame, mesa, pedido_id))
     frame.addWidget(boton_carrito, alignment=Qt.AlignCenter)
 
@@ -212,7 +214,6 @@ def mostrar_menu(frame, mesa):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: seleccionar_mesa(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
-
 
 #Pantalla Pedido Confirmado
 def pedido_confirmado(frame):
@@ -241,31 +242,30 @@ def mostrar_carrito(frame, mesa, pedido_id):
     etiqueta_carrito.setAlignment(Qt.AlignCenter)
     frame.addWidget(etiqueta_carrito)
 
-    # Crear el QListWidget para mostrar los platos del carrito
+    # Crea una lista para mostrar los platos del carrito
     lista_carrito = QListWidget()
     frame.addWidget(lista_carrito)
 
-    # Cargar los platos en el carrito
+    # Carga los platos en el carrito
     pedido = Pedido.mostrar_carrito(pedido_id)
 
     total_carrito = 0  # Variable para acumular el total del carrito
     
     for plato_id, nombre, precio, cantidad in pedido:
-         # Crear un item personalizado para el carrito
          item_text = f"{nombre} - Cantidad: {cantidad} - Precio: ${precio:.2f}"
          item = QListWidgetItem(item_text)
          item.setFont(QFont("Helvetica", 12))
-         lista_carrito.addItem(item)  # Agregar el item al QListWidget
+         lista_carrito.addItem(item)  # Agrega el item a la lista
 
-         total_carrito += precio * cantidad  # Sumar al total del carrito
+         total_carrito += precio * cantidad  # Suma el total del carrito
 
-    # Mostrar el total
-    etiqueta_total = QLabel(f"Total de su Pedido: ${total_carrito:.2f}")  # Mostrar el total acumulado
+    # Etiqueta con el total del pedido
+    etiqueta_total = QLabel(f"Total de su Pedido: ${total_carrito:.2f}")
     etiqueta_total.setFont(QFont("Helvetica", 14))
     etiqueta_total.setStyleSheet("color: #000000; background-color: #d9b5a9;")
     frame.addWidget(etiqueta_total)
 
-    # Crear un layout horizontal para los botones
+    # Crea un layout horizontal para los botones
     boton_layout = QHBoxLayout()
 
     # Botón para borrar el plato
@@ -283,8 +283,7 @@ def mostrar_carrito(frame, mesa, pedido_id):
     boton_aumentar_cantidad.clicked.connect(lambda: actualizar_carrito(frame, mesa, pedido_id, lista_carrito, "aumentar"))
     boton_layout.addWidget(boton_aumentar_cantidad)
 
-
-    # Añadir el layout de botones al frame
+    # Añade los botones al frame
     frame.addLayout(boton_layout)
 
     # Botón para confirmar el pedido
@@ -315,12 +314,12 @@ def actualizar_carrito(frame, mesa, pedido_id, lista_carrito, accion):
         # Actualizar la vista del carrito
         mostrar_carrito(frame, mesa, pedido_id)
 
-#Pantalla inicio se sesion Admin
+#Pantalla inicio de sesion Administrador
 def iniciar_sesion(frame):
     # Limpia la pantalla
     limpiar_pantalla(frame)
 
-    #Titulo
+    # Etiqueta de Inicio de Sesion
     sesion=QLabel("Inicio de Sesión")
     sesion.setFont(QFont("Helvetica", 18, QFont.Bold))
     sesion.setAlignment(Qt.AlignCenter)
@@ -380,7 +379,7 @@ def confirmar_login(entry_usuario, entry_contraseña, frame):
         mensaje_error.setStyleSheet("color: red;")
         frame.layout().addWidget(mensaje_error)
     else:
-        # Validar el administrador
+        # Valida el administrador
         islogin = Administrador.validar_administrador(usuario, contraseña)
         if islogin:
             menu_admin(frame) 
@@ -442,7 +441,7 @@ def agregar_admin(frame):
     #Limpia la Pantalla
     limpiar_pantalla(frame)
 
-    # Etiqueta del panel de administración
+    # Etiqueta de agregar Administrador
     label_menu = QLabel("Agregar Administrador")
     label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
     label_menu.setAlignment(Qt.AlignCenter)
@@ -468,25 +467,26 @@ def agregar_admin(frame):
     entry_contraseña.setStyleSheet("background-color: white;")
     frame.addWidget(entry_contraseña,alignment=Qt.AlignCenter)
 
+    # Boton agregar administrador
     boton_agregar=diseño_boton("Agregar")
     boton_agregar.clicked.connect(lambda: admin_correcto(frame,entry_usuario.text(),entry_contraseña.text()))
     frame.addWidget(boton_agregar, alignment=Qt.AlignCenter)
 
-    # Botón para volver a la pantalla inicial
+    # Botón para volver al menu del administrador
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
 
-#Admin Correcto
+# Funcion para verificar si el Administrador es Correcto
 def admin_correcto(frame, usuario, contraseña):
     # Verificar si los campos están vacíos
     if not usuario or not contraseña:
         mensaje = QLabel("Usuario y/o contraseña vacíos")
         mensaje.setFont(QFont("Helvetica", 14))
         frame.addWidget(mensaje)
-        return  # Salir de la función para evitar la inserción en la base de datos
+        return  
 
-    # Intentar agregar el administrador solo si los campos son válidos
+    # Intenta agregar el administrador solo si los campos son válidos
     isCorrect = Administrador.agregar_administrador(usuario, contraseña)
     if isCorrect:
         mensaje = QLabel("Se agregó el usuario correctamente")
@@ -502,43 +502,43 @@ def modificar_admin(frame):
     # Limpia la Pantalla
     limpiar_pantalla(frame)
 
-    # Etiqueta del panel de administración
+    # Etiqueta de modificar Administrador
     label_menu = QLabel("Modificar Administrador")
     label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
     label_menu.setAlignment(Qt.AlignCenter)
     frame.addWidget(label_menu)
 
-    # Crear tabla con QTableWidget
+    # Crea una tabla para mostrar los administradores
     table = QtWidgets.QTableWidget()
     table.setColumnCount(3)
     table.setHorizontalHeaderLabels(["ID", "Usuario", "Contraseña"])
     table.verticalHeader().setVisible(False)
     table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
-    # Ajustar el tamaño de las columnas
-    table.setColumnWidth(0, 100)  # Ancho para la columna ID
-    table.setColumnWidth(1, 300)  # Ancho para la columna Usuario
-    table.setColumnWidth(2, 300)  # Ancho para la columna Contraseña
+    # Ajustar el ancho de las columnas
+    table.setColumnWidth(0, 100)  
+    table.setColumnWidth(1, 300)  
+    table.setColumnWidth(2, 300)  
 
-    # Fijar un tamaño mínimo para la tabla
+    # Fija un tamaño mínimo para la tabla
     table.setMinimumSize(700, 250)
 
-    # Hacer que las columnas se ajusten automáticamente
+    # Hace que las columnas se ajusten automáticamente
     header = table.horizontalHeader()
     header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
     table.setStyleSheet("background: #FFDBB8;")
     
-    # Crear un layout horizontal para la tabla y los inputs
+    # Crea un layout horizontal para la tabla y los inputs
     main_layout = QtWidgets.QHBoxLayout()
 
-    # Añadir la tabla al layout principal
+    # Añade la tabla al layout principal
     main_layout.addWidget(table, alignment=Qt.AlignCenter)
 
-    # Crear un layout vertical para los labels y QLineEdits
+    # Crea un layout vertical para los labels y los LineEdits
     input_layout = QtWidgets.QVBoxLayout()
 
-    # Inputs para modificar los datos
+    # Inputs ID
     label_id = QLabel("ID")
     label_id.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_id, alignment=Qt.AlignCenter)
@@ -546,6 +546,7 @@ def modificar_admin(frame):
     id_ingresado.setStyleSheet("background-color: white;")
     input_layout.addWidget(id_ingresado, alignment=Qt.AlignCenter)
 
+    #Inputs Nombre
     label_nombre = QLabel("Nombre")
     label_nombre.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_nombre, alignment=Qt.AlignCenter)
@@ -553,6 +554,7 @@ def modificar_admin(frame):
     nombre_nuevo.setStyleSheet("background-color: white;")
     input_layout.addWidget(nombre_nuevo, alignment=Qt.AlignCenter)
 
+    #Inputs Contraseña
     label_contraseña = QLabel("Contraseña")
     label_contraseña.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_contraseña, alignment=Qt.AlignCenter)
@@ -560,13 +562,13 @@ def modificar_admin(frame):
     contraseña_nueva.setStyleSheet("background-color: white;")
     input_layout.addWidget(contraseña_nueva, alignment=Qt.AlignCenter)
 
-    # Añadir el layout de inputs al layout principal
+    # Añade el layout de inputs al layout principal
     main_layout.addLayout(input_layout)
 
-    # Añadir el layout principal al frame
+    # Añade el layout principal al frame
     frame.addLayout(main_layout)
 
-    # Cargar administradores
+    # Carga los administradores
     administradores = Administrador.obtener_administradores()
     table.setRowCount(len(administradores))
     for row, admin in enumerate(administradores):
@@ -583,7 +585,7 @@ def modificar_admin(frame):
 
     table.itemSelectionChanged.connect(on_select)
 
-    # Crear un layout horizontal para los botones
+    # Crea un layout horizontal para los botones
     button_layout = QtWidgets.QHBoxLayout()
 
     # Botón para modificar
@@ -598,15 +600,15 @@ def modificar_admin(frame):
                                           actualizar_tabla(table, Administrador.obtener_administradores)])
     button_layout.addWidget(btn_eliminar)
 
-    # Botón para volver
+    # Botón para volver al menu del administrador
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     button_layout.addWidget(boton_volver)
 
-    # Añadir el layout de botones debajo de la tabla
+    # Añade el layout de botones debajo de la tabla
     frame.addLayout(button_layout)
 
-    # Alinear el layout de botones al centro
+    # Alinea el layout de botones al centro
     button_layout.setAlignment(Qt.AlignCenter)
 
 #Funcion para actualizar las tablas
@@ -622,45 +624,44 @@ def editar_menu(frame):
     #Limpia pantalla
     limpiar_pantalla(frame)
 
-# Etiqueta de administración
+ # Etiqueta de editar menu
     label_menu = QLabel("Editar Menu")
     label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
     label_menu.setAlignment(Qt.AlignCenter)
     frame.addWidget(label_menu)
 
-    # Crear tabla con QTableWidget
+    # Crea una tabla para mostrar el menu
     table = QtWidgets.QTableWidget()
     table.setColumnCount(5)
-    table.setHorizontalHeaderLabels(["ID","Nombre", "Descipcion", "Precio","Ingredientes"])
+    table.setHorizontalHeaderLabels(["ID","Nombre", "Descipcion", "Precio", "Ingredientes"])
     table.verticalHeader().setVisible(False)
     table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
-    # Ajustar el tamaño de las columnas
-    table.setColumnWidth(0, 100)  # Ancho 
-    table.setColumnWidth(1, 300)  # Ancho 
-    table.setColumnWidth(2, 400)  # Ancho 
-    table.setColumnWidth(3, 100)  # Ancho
-    table.setColumnWidth(4, 200)  # Ancho
+    # Ajustar el ancho de las columnas
+    table.setColumnWidth(0, 100)  
+    table.setColumnWidth(1, 300)   
+    table.setColumnWidth(2, 400)   
+    table.setColumnWidth(3, 100)  
+    table.setColumnWidth(4, 200)  
 
-    # Fijar un tamaño mínimo para la tabla
+    # Fija un tamaño mínimo para la tabla
     table.setMinimumSize(700, 250)
 
-    # Hacer que las columnas se ajusten automáticamente
+    # Hace que las columnas se ajusten automáticamente
     header = table.horizontalHeader()
     header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-
     table.setStyleSheet("background: #FFDBB8;")
 
-    # Crear un layout horizontal para la tabla y los inputs
+    # Crea un layout horizontal para la tabla y los inputs
     main_layout = QtWidgets.QHBoxLayout()
 
-    # Añadir la tabla al layout principal
+    # Añade la tabla al layout principal
     main_layout.addWidget(table, alignment=Qt.AlignCenter)
 
-    # Crear un layout vertical para los labels y QLineEdits
+    # Crea un layout vertical para los labels y QLineEdits
     input_layout = QtWidgets.QVBoxLayout()
 
-    # Inputs para modificar los datos
+    # Inputs ID
     label_id = QLabel("ID")
     label_id.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_id, alignment=Qt.AlignCenter)
@@ -668,6 +669,7 @@ def editar_menu(frame):
     id_ingresado.setStyleSheet("background-color: white;")
     input_layout.addWidget(id_ingresado, alignment=Qt.AlignCenter)
 
+    # Inputs Nombre
     label_nombre = QLabel("Nombre")
     label_nombre.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_nombre, alignment=Qt.AlignCenter)
@@ -675,6 +677,7 @@ def editar_menu(frame):
     nombre_nuevo.setStyleSheet("background-color: white;")
     input_layout.addWidget(nombre_nuevo, alignment=Qt.AlignCenter)
 
+    # Inputs Descipcion
     label_descripcion = QLabel("Descipcion")
     label_descripcion.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_descripcion, alignment=Qt.AlignCenter)
@@ -682,6 +685,7 @@ def editar_menu(frame):
     descripcion_nueva.setStyleSheet("background-color: white;")
     input_layout.addWidget(descripcion_nueva, alignment=Qt.AlignCenter)
 
+    # Inputs Precio
     label_precio = QLabel("Precio")
     label_precio.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_precio, alignment=Qt.AlignCenter)
@@ -689,22 +693,22 @@ def editar_menu(frame):
     precio_nuevo.setStyleSheet("background-color: white;")
     input_layout.addWidget(precio_nuevo, alignment=Qt.AlignCenter)
 
+    # Inputs Ingredientes
     label_ingredientes = QLabel("Ingredientes")
     label_ingredientes.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_ingredientes, alignment=Qt.AlignCenter)
-
     ingredientes_nuevo = QtWidgets.QLineEdit()
     ingredientes_nuevo.setStyleSheet("background-color: white;")
     ingredientes_nuevo.setPlaceholderText("Ejemplo: tomate,2; lechuga,1; cebolla,3")  
     input_layout.addWidget(ingredientes_nuevo, alignment=Qt.AlignCenter)
 
-
-    # Añadir el layout de inputs al layout principal
+    # Añade el layout de inputs al layout principal
     main_layout.addLayout(input_layout)
 
-    # Añadir el layout principal al frame
+    # Añade el layout principal al frame
     frame.addLayout(main_layout)
 
+    #Muestra los platos
     plato = Plato.mostrar_platos()
     table.setRowCount(len(plato))
     for row, admin in enumerate(plato):
@@ -726,7 +730,7 @@ def editar_menu(frame):
 # Crear un layout horizontal para los botones
     button_layout = QtWidgets.QHBoxLayout()
 
-    # Botón para Añadir platos
+   # Botón para Añadir platos
     btn_añadir = diseño_boton("Añadir Plato")
     btn_añadir.clicked.connect(lambda: [Plato.agregar_plato(nombre_nuevo.text(), descripcion_nueva.text(), precio_nuevo.text(), ingredientes_nuevo.text()),actualizar_tabla(table,Plato.mostrar_platos)])               
     button_layout.addWidget(btn_añadir)
@@ -736,64 +740,64 @@ def editar_menu(frame):
     btn_modificar.clicked.connect(lambda: [Plato.modificar_plato(id_ingresado.text(),nombre_nuevo.text(), descripcion_nueva.text(), precio_nuevo.text(), ingredientes_nuevo.text()),actualizar_tabla(table,Plato.mostrar_platos)])
     button_layout.addWidget(btn_modificar)
 
-    # Botón para eliminar
+    # Botón para eliminar el plato
     btn_eliminar = diseño_boton("Eliminar Plato")
     btn_eliminar.clicked.connect(lambda: [Plato.eliminar_plato(id_ingresado.text()),actualizar_tabla(table,Plato.mostrar_platos)])
     button_layout.addWidget(btn_eliminar)
 
-    # Botón para volver
+    # Botón para volver al menu del admin
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     button_layout.addWidget(boton_volver)
 
-    # Añadir el layout de botones debajo de la tabla
+    # Añade el layout de botones debajo de la tabla
     frame.addLayout(button_layout)
 
-    # Alinear el layout de botones al centro
-    button_layout.setAlignment(Qt.AlignCenter)    
-
+    # Alinea el layout de botones al centro
+    button_layout.setAlignment(Qt.AlignCenter)
+        
 #Pantalla editar ingredientes
 def editar_ingredientes(frame):
     #Limpia pantalla
     limpiar_pantalla(frame)
 
-    # Etiqueta de administración
+    # Etiqueta de editar Ingrediente
     label_menu = QLabel("Editar Ingredientes")
     label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
     label_menu.setAlignment(Qt.AlignCenter)
     frame.addWidget(label_menu)
 
-    # Crear tabla con QTableWidget
+    # Crea una tabla
     table = QtWidgets.QTableWidget()
     table.setColumnCount(3)
     table.setHorizontalHeaderLabels(["ID","Nombre","Stock"])
     table.verticalHeader().setVisible(False)
     table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
-    # Ajustar el tamaño de las columnas
-    table.setColumnWidth(0, 100)  # Ancho 
-    table.setColumnWidth(1, 300)  # Ancho 
-    table.setColumnWidth(2, 400)  # Ancho 
+    # Ajustar el ancho de las columnas
+    table.setColumnWidth(0, 100)   
+    table.setColumnWidth(1, 300)  
+    table.setColumnWidth(2, 400)   
 
-    # Fijar un tamaño mínimo para la tabla
+    # Fija un tamaño mínimo para la tabla
     table.setMinimumSize(700, 250)
 
-    # Hacer que las columnas se ajusten automáticamente
+    # Hace que las columnas se ajusten automáticamente
     header = table.horizontalHeader()
     header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
     table.setStyleSheet("background: #FFDBB8;")
 
-    # Crear un layout horizontal para la tabla y los inputs
+    # Crea un layout horizontal para la tabla y los inputs
     main_layout = QtWidgets.QHBoxLayout()
 
-    # Añadir la tabla al layout principal
+    # Añade la tabla al layout principal
     main_layout.addWidget(table, alignment=Qt.AlignCenter)
 
-    # Crear un layout vertical para los labels y QLineEdits
+    # Crea un layout vertical para los labels y QLineEdits
     input_layout = QtWidgets.QVBoxLayout()
 
-    # Inputs para modificar los datos
+    # Inputs ID
     label_id = QLabel("ID")
     label_id.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_id, alignment=Qt.AlignCenter)
@@ -801,6 +805,7 @@ def editar_ingredientes(frame):
     id_ingresado.setStyleSheet("background-color: white;")
     input_layout.addWidget(id_ingresado, alignment=Qt.AlignCenter)
 
+    # Inputs nombre
     label_nombre = QLabel("Nombre")
     label_nombre.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_nombre, alignment=Qt.AlignCenter)
@@ -808,6 +813,7 @@ def editar_ingredientes(frame):
     nombre_nuevo.setStyleSheet("background-color: white;")
     input_layout.addWidget(nombre_nuevo, alignment=Qt.AlignCenter)
 
+    # Inputs Stock
     label_stock = QLabel("Stock")
     label_stock.setFont(QFont("Helvetica", 12, QFont.Bold))
     input_layout.addWidget(label_stock, alignment=Qt.AlignCenter)
@@ -815,13 +821,13 @@ def editar_ingredientes(frame):
     stock_nueva.setStyleSheet("background-color: white;")
     input_layout.addWidget(stock_nueva, alignment=Qt.AlignCenter)
 
-
-    # Añadir el layout de inputs al layout principal
+    # Añade el layout de inputs al layout principal
     main_layout.addLayout(input_layout)
 
-    # Añadir el layout principal al frame
+    # Añade el layout principal al frame
     frame.addLayout(main_layout)
 
+    #Muestra los ingredientes
     ingrediente = Ingredientes.mostrar_bd_Ingredientes()
     table.setRowCount(len(ingrediente))
     for row, ingre in enumerate(ingrediente):
@@ -852,12 +858,12 @@ def editar_ingredientes(frame):
     btn_modificar.clicked.connect(lambda: [Ingredientes.modificar_ingrediente(id_ingresado.text(), nombre_nuevo.text(), stock_nueva.text()), actualizar_tabla(table, Ingredientes.mostrar_bd_Ingredientes)])
     button_layout.addWidget(btn_modificar)
 
-    # Botón para eliminar
+    # Botón para eliminar ingrediente
     btn_eliminar = diseño_boton("Eliminar \n Ingrediente")
     btn_eliminar.clicked.connect(lambda: [Ingredientes.eliminar_ingrediente(id_ingresado.text()), actualizar_tabla(table, Ingredientes.mostrar_bd_Ingredientes)])
     button_layout.addWidget(btn_eliminar)
 
-    # Botón para volver
+    # Botón para volver al menu del admin
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     button_layout.addWidget(boton_volver)
@@ -868,7 +874,7 @@ def editar_ingredientes(frame):
     # Alinear el layout de botones al centro
     button_layout.setAlignment(Qt.AlignCenter) 
 
-# Creación de la app
+# Creación de la ventana
 def pantalla_principal():
     # Crear la aplicación
     app = QApplication(sys.argv)
@@ -883,28 +889,28 @@ def pantalla_principal():
     # Tamaño de la ventana
     ancho, alto = 800, 700
 
-    # Centrar la ventana en la pantalla
+    # Centra la ventana en la pantalla
     ancho_pantalla = QApplication.primaryScreen().size().width()
     alto_pantalla = QApplication.primaryScreen().size().height()
     pos_x = (ancho_pantalla // 2) - (ancho // 2)
     pos_y = (alto_pantalla // 2) - (alto // 2)
     pantalla.setGeometry(pos_x, pos_y, ancho, alto)
 
-    # Crear un widget central y un layout
+    # Crea un widget central y un layout
     contenedor = QWidget()
     pantalla.setCentralWidget(contenedor)
-    # Establecer el color de fondo del contenedor
+    # Establece el color de fondo del contenedor
     contenedor.setStyleSheet("background-color: #d9b5a9;")
     frame = QVBoxLayout(contenedor)
 
-    # Mostrar la pantalla inicial
+    # Muestra la pantalla inicial
     pantalla_inicial(frame)
 
-    # Mostrar la ventana
+    # Muestra la ventana
     pantalla.show()
 
-    # Ejecutar el bucle principal de la aplicación
+    # Ejecuta el bucle principal de la aplicación
     sys.exit(app.exec_())
 
-# Llamar a la función pantalla_principal para mostrar la ventana
+# Llama a la función pantalla_principal para mostrar la ventana
 pantalla_principal()

@@ -7,6 +7,8 @@ conn = pymysql.connect(
         database='platos_bd')
 cursor = conn.cursor()
 
+# Crear las tablas si no existen
+# Crear la tabla Platos
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS platos (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -16,6 +18,7 @@ CREATE TABLE IF NOT EXISTS platos (
 )
 ''')
 
+# Crear la tabla Plato_Ingredientes
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS Plato_Ingredientes (
         plato_id INTEGER,
@@ -29,11 +32,12 @@ cursor.execute('''
 
 conn.commit()
 
+#Funcion para mostrar los platos al administrador
 def mostrar_platos():
     # Consulta para obtener los platos junto con sus ingredientes y cantidades
     query = """
         SELECT p.id, p.nombre, p.descripcion, p.precio, 
-               GROUP_CONCAT(CONCAT(i.nombre, ' ,', pi.cantidad, '') SEPARATOR '; ') AS ingredientes
+               GROUP_CONCAT(CONCAT(i.nombre, ' ,', pi.cantidad, '') SEPARATOR ', ') AS ingredientes
         FROM platos p
         LEFT JOIN Plato_Ingredientes pi ON p.id = pi.plato_id
         LEFT JOIN ingredientes i ON pi.ingrediente_id = i.id
@@ -45,32 +49,39 @@ def mostrar_platos():
 
 #Funcion para mostrar el menu al cliente
 def mostrar_menu ():
-    cursor.execute("SELECT nombre, descripcion, precio FROM platos")
+    #Obtiene los datos de la tabla platos
+    cursor.execute("SELECT nombre, descripcion, precio FROM platos") 
     Lista_menu = cursor.fetchall()
     return Lista_menu
 
-
+#Funcion para agregar un plato (Administrador)
 def agregar_plato(nombre, descripcion, precio, ingredientes_str):
-    # Insertar el nuevo plato
+    # Inserta el nuevo plato en la tabla platos
     cursor.execute("INSERT INTO platos (nombre, descripcion, precio) VALUES (%s, %s, %s)", (nombre, descripcion, precio))
-    plato_id = cursor.lastrowid  # Obtener el ID del plato recién agregado
+    # Obtiene el ID del plato recién agregado
+    plato_id = cursor.lastrowid 
 
-    # Separar el string de ingredientes en partes
+    # Separa el string de ingredientes en partes
     ingredientes = ingredientes_str.split(';') if ingredientes_str else []
 
     for ingrediente in ingredientes:
-        # Separar nombre y cantidad
+        # Separa el nombre y cantidad
         if ',' in ingrediente:
-            nombre_ingrediente, cantidad = ingrediente.split(',', 1)  # Limitar a 1 separación
-            nombre_ingrediente = nombre_ingrediente.strip()  # Eliminar espacios
+            # Limita a 1 la separación
+            nombre_ingrediente, cantidad = ingrediente.split(',', 1) 
+            # Elimina los espacios 
+            nombre_ingrediente = nombre_ingrediente.strip()  
             cantidad = cantidad.strip()
 
-            # Buscar el ID del ingrediente basado en su nombre
+            # Busca el ID del ingrediente basado en su nombre
             cursor.execute("SELECT id FROM ingredientes WHERE nombre = %s", (nombre_ingrediente,))
             resultado = cursor.fetchone()
 
-            if resultado:  # Si se encontró el ingrediente
-                ingrediente_id = resultado[0]  # Obtener el ID
+            # Si se encontró el ingrediente
+            if resultado:  
+                #Obtiene el ID
+                ingrediente_id = resultado[0] 
+                # Inserta la ID del plato e ingrediente y la cantidad del ingrediente en la tabla Plato_Ingrediente
                 cursor.execute("INSERT INTO Plato_Ingredientes (plato_id, ingrediente_id, cantidad) VALUES (%s, %s, %s)", (plato_id, ingrediente_id, cantidad))
             else:
                 return f"Ingrediente '{nombre_ingrediente}' no existe. El plato no fue agregado."
@@ -81,19 +92,20 @@ def agregar_plato(nombre, descripcion, precio, ingredientes_str):
     conn.commit()
     return "Plato agregado exitosamente."
 
-
+#Funcion para Eliminar un plato (Administrador)
 def eliminar_plato(plato_id):
-    # Primero, eliminamos los ingredientes asociados
+    # Se elimina los ingredientes asociados al plato
     cursor.execute("DELETE FROM Plato_Ingredientes WHERE plato_id = %s", (plato_id,))
     
-    # Luego, eliminamos el plato
+    # Se eliminamos el plato
     cursor.execute("DELETE FROM platos WHERE id = %s", (plato_id,))
     conn.commit()
     
     return "Plato eliminado correctamente." if cursor.rowcount > 0 else "El plato no existe."
 
+#Funcion para modificar un plato (Administrador)
 def modificar_plato(plato_id, nuevo_nombre, nueva_descripcion, nuevo_precio, nuevos_ingredientes):
-    # Actualizar los datos del plato
+    # Actualiza los datos del plato
     if nuevo_nombre is not None or nueva_descripcion is not None or nuevo_precio is not None:
         cursor.execute('''
             UPDATE platos
@@ -104,12 +116,12 @@ def modificar_plato(plato_id, nuevo_nombre, nueva_descripcion, nuevo_precio, nue
         ''', (nuevo_nombre, nueva_descripcion, nuevo_precio, plato_id))
         conn.commit()
 
-    # Actualizar los ingredientes
+    # Actualiza los ingredientes
         ingredientes_lista = []
         for ingrediente in nuevos_ingredientes.split(';'):
-            # Suponiendo que cada ingrediente tiene el formato "nombre,cantidad"
             nombre, cantidad = ingrediente.split(',')
-            ingredientes_lista.append((nombre.strip(), cantidad.strip()))  # Agrega tupla a la lista
+            # Agrega tupla a la lista
+            ingredientes_lista.append((nombre.strip(), cantidad.strip()))  
 
         # Actualiza el plato en la base de datos
         cursor.execute(
@@ -122,7 +134,7 @@ def modificar_plato(plato_id, nuevo_nombre, nueva_descripcion, nuevo_precio, nue
 
         # Agrega los nuevos ingredientes al plato
         for nombre_ingrediente, cantidad in ingredientes_lista:
-            # Primero, verifica que el ingrediente exista en la base de datos
+            # Verifica que el ingrediente exista en la base de datos
             cursor.execute("SELECT id FROM ingredientes WHERE nombre = %s", (nombre_ingrediente,))
             resultado = cursor.fetchone()
             if resultado:
@@ -133,8 +145,5 @@ def modificar_plato(plato_id, nuevo_nombre, nueva_descripcion, nuevo_precio, nue
                 )
             else:
                 print(f"Ingrediente '{nombre_ingrediente}' no encontrado. No se puede agregar.")
-
-        # Confirma los cambios en la base de datos
         conn.commit()
-
     return "Plato modificado exitosamente."

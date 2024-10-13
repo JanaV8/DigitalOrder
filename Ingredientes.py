@@ -30,7 +30,6 @@ def añadir_ingrediente(nombre_ingresado, cantidad_ingresada):
     except pymysql.IntegrityError:
         return 'ingrediente inexistente'
 
-
 #Funcion para mostrar Ingredientes
 def mostrar_bd_Ingredientes ():
     #Obtiene los datos de los ingredientes de la base de datos
@@ -52,6 +51,7 @@ def modificar_ingrediente(id_seleccionado, nombre_nuevo = None ,cantidad_nueva =
         return "No hay valores que actualizar."
     conn.commit()
 
+#Funcion para eliminar un ingrediente
 def eliminar_ingrediente(id_seleccionado):  
     # Eliminar el ingrediente tomando la ID como referencia
     cursor.execute("DELETE FROM ingredientes WHERE id = %s", (id_seleccionado))
