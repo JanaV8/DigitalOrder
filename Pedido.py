@@ -44,6 +44,13 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
 
 conn.commit()
 
+def agregar_columna_estado():
+    cursor.execute('''
+        ALTER TABLE pedido_plato ADD COLUMN estado VARCHAR(255)
+    ''')
+    conn.commit()  # Confirma el cambio en la base de datos
+    print("Columna 'estado' agregada correctamente.")
+
 # Funcion para agregar un plato al carrito
 def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
         #Busca la id del plato mediante su nombre
@@ -164,3 +171,66 @@ def aumentar_cantidad(cantidad_exitente, pedido_id, plato_id):
     cursor.execute("UPDATE Pedido_Plato SET cantidad=%s WHERE pedido_id=%s AND plato_id=%s", 
                            (nueva_cantidad, pedido_id, plato_id))
     conn.commit()
+
+
+def ver_pedidos():
+    # Unir las tablas pedido y Pedido_Plato para obtener la información completa
+    cursor.execute('''
+        SELECT pedido.id, pedido.numeroMesa, platos.nombre, Pedido_Plato.cantidad
+        FROM pedido
+        JOIN Pedido_Plato ON pedido.id = Pedido_Plato.pedido_id
+        JOIN platos ON Pedido_Plato.plato_id = platos.id
+    ''')
+    
+    pedidos = cursor.fetchall()
+
+    # Creamos un diccionario para organizar la información por pedido
+    pedidos_dict = {}
+    for pedido_id, numero_mesa, nombre_plato, cantidad in pedidos:
+        if pedido_id not in pedidos_dict:
+            pedidos_dict[pedido_id] = {
+                'numero_mesa': numero_mesa,
+                'platos': []
+            }
+        pedidos_dict[pedido_id]['platos'].append({'nombre': nombre_plato, 'cantidad': cantidad})
+
+    # Mostrar los pedidos de manera organizada
+    for pedido_id, detalles in pedidos_dict.items():
+        print(f"Pedido ID: {pedido_id}, Mesa: {detalles['numero_mesa']}")
+        for plato in detalles['platos']:
+            print(f"  Plato: {plato['nombre']}, Cantidad: {plato['cantidad']}")
+            
+def obtener_pedidos():
+        cursor.execute('''
+        SELECT pedido.id, pedido.numeroMesa, platos.nombre, pedido_plato.cantidad, pedido_plato.estado 
+        FROM pedido 
+        JOIN pedido_plato ON pedido.id = pedido_plato.pedido_id 
+        JOIN platos ON pedido_plato.plato_id = platos.id
+''')
+        return cursor.fetchall()
+
+    
+def actualizar_estado(pedido_id):
+    cursor.execute("SELECT estado FROM pedido_plato WHERE pedido_id = %s", (pedido_id,))
+    estado_actual = cursor.fetchone()[0]
+
+    if estado_actual == "Pendiente":
+        nuevo_estado = "En preparación"
+    elif estado_actual == "En preparación":
+        nuevo_estado = "Listo"
+    else:
+        return False  # No cambia si ya está listo
+        
+    cursor.execute("UPDATE pedido_plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
+    conn.commit()
+    return True
+    
+    
+def registrar_cocinero_pedido(pedido_id, cocinero_id):
+    # Asocia el cocinero al pedido finalizado
+    cursor.execute('''UPDATE pedido 
+                      SET cocinero_id = %s 
+                      WHERE id = %s''', 
+                      (cocinero_id, pedido_id))
+    conn.commit()
+    print("Cocinero registrado para el pedido.")

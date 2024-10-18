@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import (QLabel, QPushButton, QVBoxLayout, QApplication, QMainWindow, QWidget, QGridLayout, QLineEdit, QListWidgetItem, QListWidget,QHBoxLayout)
+from PyQt5.QtWidgets import QWidget, QVBoxLayout,QScrollArea, QPushButton,QComboBox,QGroupBox
 from PyQt5.QtGui import QFont, QPixmap, QIcon
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
@@ -27,8 +28,11 @@ def diseño_boton(texto, tamaño=14):
     boton.setFixedSize(180, 50)  # Ajusta el tamaño del botón
     return boton
 
+
 # Pantalla Inicial
 def pantalla_inicial(frame):
+    
+    
     # Limpia la pantalla
     limpiar_pantalla(frame)
 
@@ -52,7 +56,7 @@ def pantalla_inicial(frame):
 
     # Botón Iniciar sesión Cocinero
     boton_cocinero = diseño_boton("Iniciar Sesión \n Cocinero")
-    boton_cocinero.clicked.connect(lambda: Cocinero.iniciar_sesion(frame, "Cocinero"))
+    boton_cocinero.clicked.connect(lambda: iniciar_sesion_cocinero(frame))
     frame.addWidget(boton_cocinero,alignment=Qt.AlignCenter)
 
     # Carga la imagen de Chef y la redimensiona
@@ -313,6 +317,135 @@ def actualizar_carrito(frame, mesa, pedido_id, lista_carrito, accion):
 
         # Actualizar la vista del carrito
         mostrar_carrito(frame, mesa, pedido_id)
+
+def mostrar_pedidos(frame):
+    # Consulta para obtener los pedidos
+    pedidos = Pedido.obtener_pedidos()  # Usamos el método que ya tienes para obtener los pedidos
+    
+    # Obtener lista de cocineros
+    lista_cocineros = Cocinero.obtener_cocineros()  # Esta debe devolver los nombres de los cocineros
+
+    # Limpiar la pantalla
+    limpiar_pantalla(frame)
+
+    # Crear un QScrollArea para los pedidos
+    scroll_area = QScrollArea()
+    scroll_area.setWidgetResizable(True)
+
+    # Crear el widget que contendrá los pedidos
+    scroll_content = QWidget()
+    scroll_layout = QVBoxLayout(scroll_content)
+
+    # Layout para los pedidos
+    for pedido in pedidos:
+        pedido_id, numero_mesa, plato, cantidad, estado = pedido
+
+        # Crear una caja para cada pedido
+        group_box = QGroupBox(f"Pedido #{pedido_id} - Mesa: {numero_mesa}")
+        layout_pedido = QVBoxLayout()
+
+        # Mostrar platos del pedido
+        layout_pedido.addWidget(QLabel(f"Plato: {plato}, Cantidad: {cantidad}"))
+        layout_pedido.addWidget(QLabel(f"Estado actual: {estado}"))
+
+        # ComboBox para elegir cocinero
+        cocinero_combo = QComboBox()
+        cocinero_combo.addItems(lista_cocineros)  # Agregar cocineros de la base de datos
+        layout_pedido.addWidget(QLabel("Selecciona Cocinero:"))
+        layout_pedido.addWidget(cocinero_combo)
+
+        # Botón para confirmar el pedido y asignar cocinero
+        confirmar_btn = QPushButton("Confirmar Pedido")
+        # Usar un valor por defecto en la función lambda para que capture el pedido_id actual
+        confirmar_btn.clicked.connect(lambda _, pid=pedido_id, combo=cocinero_combo: confirmar_pedido(pid, combo))
+        layout_pedido.addWidget(confirmar_btn)
+
+        # Añadir el layout del pedido al group box
+        group_box.setLayout(layout_pedido)
+        scroll_layout.addWidget(group_box)  # Añadir el group_box al layout scroll
+
+    # Establecer el widget de contenido desplazable en el área de scroll
+    scroll_content.setLayout(scroll_layout)
+    scroll_area.setWidget(scroll_content)
+
+    # Añadir el área de scroll al frame principal
+    frame.addWidget(scroll_area)
+
+def confirmar_pedido(pedido_id, cocinero_combo):
+    cocinero_seleccionado = cocinero_combo.currentText()
+    print(f"Pedido {pedido_id} asignado a {cocinero_seleccionado}")
+
+
+
+
+
+
+def iniciar_sesion_cocinero(frame):
+    # Limpia la pantalla
+    limpiar_pantalla(frame)
+
+    # Etiqueta de Inicio de Sesion para Cocinero
+    sesion = QLabel("Inicio de Sesión - Cocinero")
+    sesion.setFont(QFont("Helvetica", 18, QFont.Bold))
+    sesion.setAlignment(Qt.AlignCenter)
+    frame.addWidget(sesion)
+
+    # Campo de usuario
+    usuario = QLabel("Usuario:")
+    usuario.setFont(QFont("Helvetica", 14))
+    usuario.setAlignment(Qt.AlignCenter)
+    frame.addWidget(usuario)
+    entry_usuario = QLineEdit()
+    entry_usuario.setFixedSize(200, 30)  # Establece un ancho de 200 y un alto de 30
+    entry_usuario.setStyleSheet("background-color: white;")
+    frame.addWidget(entry_usuario, alignment=Qt.AlignCenter)
+
+    # Campo de contraseña
+    contraseña = QLabel("Contraseña:")
+    contraseña.setFont(QFont("Helvetica", 14))
+    contraseña.setAlignment(Qt.AlignCenter)
+    frame.addWidget(contraseña)
+    entry_contraseña = QLineEdit()
+    entry_contraseña.setFixedSize(200, 30)  # Establece un ancho de 200 y un alto de 30
+    entry_contraseña.setStyleSheet("background-color: white;")
+    entry_contraseña.setEchoMode(QLineEdit.Password)
+    frame.addWidget(entry_contraseña, alignment=Qt.AlignCenter)
+
+    # Botón para mostrar u ocultar la contraseña
+    boton_mostrar = diseño_boton("Mostrar Contraseña", tamaño=12)
+    boton_mostrar.clicked.connect(lambda: mostrar_contraseña(entry_contraseña))
+    frame.addWidget(boton_mostrar, alignment=Qt.AlignCenter)
+
+    # Botón para iniciar sesión como Cocinero
+    boton_login = diseño_boton("Iniciar Sesión")
+    boton_login.clicked.connect(lambda: confirmar_login_cocinero(entry_usuario, entry_contraseña,frame))
+    frame.addWidget(boton_login, alignment=Qt.AlignCenter)
+
+    # Botón para volver a la pantalla inicial
+    boton_volver = diseño_boton("Volver")
+    boton_volver.clicked.connect(lambda: pantalla_inicial(frame))
+    frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
+# Función para confirmar el inicio de sesión
+def confirmar_login_cocinero(entry_usuario, entry_contraseña,frame):
+    usuario = entry_usuario.text()
+    contraseña = entry_contraseña.text()
+
+    # Si el usuario y/o contraseña son vacíos o incorrectos, se imprimen en la pantalla
+    if not usuario or not contraseña:
+        mensaje_error = QLabel("Usuario y/o contraseña vacíos")
+        mensaje_error.setStyleSheet("color: red;")
+        frame.layout().addWidget(mensaje_error)
+    else:
+        # Valida el administrador
+        islogin = Cocinero.validar_Cocinero(usuario, contraseña)
+        if islogin:
+            mostrar_pedidos(frame) 
+        else:
+            mensaje_error = QLabel("Usuario y/o contraseña incorrectos")
+            mensaje_error.setStyleSheet("color: red;")
+            frame.layout().addWidget(mensaje_error)
+
 
 #Pantalla inicio de sesion Administrador
 def iniciar_sesion(frame):
