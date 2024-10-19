@@ -36,6 +36,8 @@ def pantalla_inicial(frame):
     # Limpia la pantalla
     limpiar_pantalla(frame)
 
+    
+
     #logo de la app
     logo_label = QLabel()
     pixmap = QPixmap("Iconos\\Digital Order Logo.png")
@@ -336,16 +338,33 @@ def mostrar_pedidos(frame):
     scroll_content = QWidget()
     scroll_layout = QVBoxLayout(scroll_content)
 
-    # Layout para los pedidos
+    # Agrupar los pedidos por ID
+    pedidos_dict = {}
     for pedido in pedidos:
         pedido_id, numero_mesa, plato, cantidad, estado = pedido
+        if pedido_id not in pedidos_dict:
+            pedidos_dict[pedido_id] = {
+                'numero_mesa': numero_mesa,
+                'platos': [],
+                'estado': estado
+            }
+        pedidos_dict[pedido_id]['platos'].append({'plato': plato, 'cantidad': cantidad})
+
+    # Layout para los pedidos agrupados
+    for pedido_id, detalles in pedidos_dict.items():
+        numero_mesa = detalles['numero_mesa']
+        estado = detalles['estado']
+        platos = detalles['platos']
 
         # Crear una caja para cada pedido
         group_box = QGroupBox(f"Pedido #{pedido_id} - Mesa: {numero_mesa}")
         layout_pedido = QVBoxLayout()
 
         # Mostrar platos del pedido
-        layout_pedido.addWidget(QLabel(f"Plato: {plato}, Cantidad: {cantidad}"))
+        for plato in platos:
+            layout_pedido.addWidget(QLabel(f"Plato: {plato['plato']}, Cantidad: {plato['cantidad']}"))
+
+        # Mostrar el estado actual del pedido
         layout_pedido.addWidget(QLabel(f"Estado actual: {estado}"))
 
         # ComboBox para elegir cocinero
@@ -355,9 +374,8 @@ def mostrar_pedidos(frame):
         layout_pedido.addWidget(cocinero_combo)
 
         # Botón para confirmar el pedido y asignar cocinero
-        confirmar_btn = QPushButton("Confirmar Pedido")
-        # Usar un valor por defecto en la función lambda para que capture el pedido_id actual
-        confirmar_btn.clicked.connect(lambda _, pid=pedido_id, combo=cocinero_combo: confirmar_pedido(pid, combo))
+        confirmar_btn = QPushButton("Actualizar Pedido")
+        confirmar_btn.clicked.connect(lambda _, pid=pedido_id, combo=cocinero_combo: [confirmar_pedido(pid, combo), Pedido.actualizar_estado(pid), mostrar_pedidos(frame)])
         layout_pedido.addWidget(confirmar_btn)
 
         # Añadir el layout del pedido al group box
@@ -370,6 +388,13 @@ def mostrar_pedidos(frame):
 
     # Añadir el área de scroll al frame principal
     frame.addWidget(scroll_area)
+    
+    # Botón para volver a la pantalla inicial
+    boton_volver = diseño_boton("Volver")
+    boton_volver.clicked.connect(lambda: pantalla_inicial(frame))
+    frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+    
+
 
 def confirmar_pedido(pedido_id, cocinero_combo):
     cocinero_seleccionado = cocinero_combo.currentText()

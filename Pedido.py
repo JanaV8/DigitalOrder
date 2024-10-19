@@ -45,11 +45,19 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
 conn.commit()
 
 def agregar_columna_estado():
+    # Agregar la columna 'estado' con valor por defecto 'Pendiente'
     cursor.execute('''
-        ALTER TABLE pedido_plato ADD COLUMN estado VARCHAR(255)
+        ALTER TABLE pedido_plato ADD COLUMN estado VARCHAR(255) DEFAULT 'Pendiente'
     ''')
     conn.commit()  # Confirma el cambio en la base de datos
     print("Columna 'estado' agregada correctamente.")
+
+    # Actualizar todas las filas existentes para que tengan 'Pendiente' en la columna 'estado'
+    cursor.execute('''
+        UPDATE pedido_plato SET estado = 'Pendiente' WHERE estado IS NULL
+    ''')
+    conn.commit()  # Confirma el cambio
+    print("Todas las filas actualizadas con el valor 'Pendiente'.")
 
 # Funcion para agregar un plato al carrito
 def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
@@ -211,26 +219,48 @@ def obtener_pedidos():
 
     
 def actualizar_estado(pedido_id):
-    cursor.execute("SELECT estado FROM pedido_plato WHERE pedido_id = %s", (pedido_id,))
-    estado_actual = cursor.fetchone()[0]
-
+    try:
+        # Obtener el estado actual del pedido
+        cursor.execute("SELECT estado FROM pedido_plato WHERE pedido_id = %s", (pedido_id,))
+        estado_actual = cursor.fetchone()[0]
+    except(TypeError,IndexError):
+        print(f"No se encontro el pedido con ID {pedido_id}.")
+        return False   
+   
+    # Verificar el estado y actualizar
     if estado_actual == "Pendiente":
         nuevo_estado = "En preparación"
     elif estado_actual == "En preparación":
         nuevo_estado = "Listo"
+    elif estado_actual == "Listo":
+        # Si el estado ya está en "Listo", elimina el pedido
+        eliminar_pedido(pedido_id)
+        return True  # Salir ya que se eliminó el pedido
     else:
-        return False  # No cambia si ya está listo
-        
+        return False  # No se hace nada si no es un estado válido
+
+    # Actualizar el estado en la tabla
     cursor.execute("UPDATE pedido_plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
     conn.commit()
+
+    # Si el pedido llega al estado "Listo", eliminarlo
+    if nuevo_estado == "Listo":
+        eliminar_pedido(pedido_id)
+
     return True
-    
-    
-def registrar_cocinero_pedido(pedido_id, cocinero_id):
-    # Asocia el cocinero al pedido finalizado
-    cursor.execute('''UPDATE pedido 
-                      SET cocinero_id = %s 
-                      WHERE id = %s''', 
-                      (cocinero_id, pedido_id))
+
+def eliminar_pedido(pedido_id):
+    # Primero eliminamos de Pedido_Plato las entradas asociadas al pedido
+    cursor.execute("DELETE FROM pedido_plato WHERE pedido_id = %s", (pedido_id,))
     conn.commit()
-    print("Cocinero registrado para el pedido.")
+
+    # Luego eliminamos el pedido de la tabla pedido
+    cursor.execute("DELETE FROM pedido WHERE id = %s", (pedido_id,))
+    conn.commit()
+
+    print(f"Pedido {pedido_id} eliminado correctamente.")
+
+
+
+
+    
