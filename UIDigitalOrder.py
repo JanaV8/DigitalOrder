@@ -88,15 +88,18 @@ def seleccionar_mesa(frame):
     # Crea 20 mesas
     for i in range(1, 21):
          pedido_activo = Pedido.bloquear_mesa(i)
+        
          boton_mesa = QPushButton(f"Mesa {i}")
          boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))  
          boton_mesa.setStyleSheet("background-color: #ffffff;") 
          boton_mesa.setFixedSize(100, 40) 
-         
+         print(f"Mesa {i} bloqueada: {pedido_activo}")
          #Bloqueo de boton de la mesa
          if pedido_activo:
              boton_mesa.setEnabled(False)
-        
+         else:
+             boton_mesa.setEnabled(True)
+             
          boton_mesa.clicked.connect(lambda checked, mesa=i: mostrar_menu(frame, mesa))
          boton_mesa.setStyleSheet("""
             background-color: #f4f4f4;
