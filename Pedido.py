@@ -260,7 +260,19 @@ def eliminar_pedido(pedido_id):
 
     print(f"Pedido {pedido_id} eliminado correctamente.")
 
+def bloquear_mesa(mesa_id):
+    try:
+        #Este metodo sirve para que cuando una mesa tenga un pedido se bloquee los btn
+        cursor.execute(f'''SELECT id FROM pedido WHERE numeroMesa = {mesa_id} ''') 
+        pedido = cursor.fetchone()
+        return pedido is not None
+    except pymysql.MySQLError as e:
+            print(f"Error en la consulta: {e}")
+            return False
 
+
+          
+         
 
 
     
