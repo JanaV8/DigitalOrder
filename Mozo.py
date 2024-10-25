@@ -63,3 +63,10 @@ def actualizar_administrador (id_ingresado, nombre_nuevo = None, contraseña_nue
     else:
         return "No hay valores que actualizar."
     conn.commit()
+
+#Funcion para mostrar mozos
+def obtener_mozos():
+    #Obtiene los datos de los mozos de la base de datos
+    cursor.execute("SELECT id, usuario, contraseña FROM mozos")  
+    mozos = cursor.fetchall()
+    return mozos

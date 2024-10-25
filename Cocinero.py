@@ -56,3 +56,10 @@ def validar_Cocinero (usuarioIngresado,contraseñaIngresado):
         #Llamamos la funcion para cambiar el GUI
     else:
         return False
+    
+#Funcion para mostrar Cocineros
+def obtener_cocineros():
+    #Obtiene los datos de los cocineros de la base de datos
+    cursor.execute("SELECT id, usuario, contraseña FROM cocineros")  
+    cocineros = cursor.fetchall()
+    return cocineros
