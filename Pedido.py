@@ -42,7 +42,35 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
 )
 ''')
 
+#Crear la tabla Pedido_Plato
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS Historial_Pedido (
+    pedido_id INT,
+    plato_id INT,
+    cantidad INT NOT NULL DEFAULT 1,
+    PRIMARY KEY (pedido_id, plato_id),
+    FOREIGN KEY (pedido_id) REFERENCES pedido(id),
+    FOREIGN KEY (plato_id) REFERENCES platos(id)
+)
+''')
+
+
 conn.commit()
+
+def agregar_columna_estado_historial():
+    # Agregar la columna 'estado' con valor por defecto 'Pendiente'
+    cursor.execute('''
+        ALTER TABLE Historial_Pedido ADD COLUMN estado VARCHAR(255) DEFAULT 'Pendiente'
+    ''')
+    conn.commit()  # Confirma el cambio en la base de datos
+    print("Columna 'estado' agregada correctamente.")
+
+    # Actualizar todas las filas existentes para que tengan 'Pendiente' en la columna 'estado'
+    cursor.execute('''
+        UPDATE Historial_Pedido SET estado = 'Pendiente' WHERE estado IS NULL
+    ''')
+    conn.commit()  # Confirma el cambio
+    print("Todas las filas actualizadas con el valor 'Pendiente'.")
 
 def agregar_columna_estado():
     # Agregar la columna 'estado' con valor por defecto 'Pendiente'
@@ -72,14 +100,17 @@ def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
             # Verificar si el plato ya está en el carrito
             cursor.execute("SELECT cantidad FROM Pedido_Plato WHERE pedido_id = %s AND plato_id = %s", (pedido_id, plato_id))
             resultado_carrito = cursor.fetchone()
-
+            
+            
             if resultado_carrito:
                 # Si ya está en el carrito, actualizar la cantidad
                 nueva_cantidad = resultado_carrito[0] + cantidad
                 cursor.execute("UPDATE Pedido_Plato SET cantidad = %s WHERE pedido_id = %s AND plato_id = %s", (nueva_cantidad, pedido_id, plato_id))
+               
             else:
                 # Si no está en el carrito, insertar el plato
                 cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
+                
 
             print("Plato agregado o actualizado en el carrito.")
         else:
@@ -124,6 +155,15 @@ def confirmar_pedido(pedido_id, numero_mesa):
 
     # Actualiza el pedido con el número de mesa y el precio final
     cursor.execute("UPDATE pedido SET numeroMesa=%s, precioFinal=%s WHERE id=%s", (numero_mesa, precio_final, pedido_id))
+    
+    # Guardar el pedido confirmado en Historial_Pedido
+    cursor.execute("""
+        INSERT INTO Historial_Pedido (pedido_id, plato_id, cantidad, estado)
+        SELECT pedido_id, plato_id, cantidad, 'Pendiente'
+        FROM Pedido_Plato
+        WHERE pedido_id = %s
+    """, (pedido_id,))
+    
     conn.commit() 
     
     return "Pedido confirmado y stock actualizado correctamente."
@@ -239,8 +279,12 @@ def actualizar_estado(pedido_id):
     else:
         return False  # No se hace nada si no es un estado válido
 
-    # Actualizar el estado en la tabla
+    # Actualizar el estado en la tabla pedido_plato
     cursor.execute("UPDATE pedido_plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
+    
+    # Actualizar el estado en la tabla Historial_Pedido
+    cursor.execute("UPDATE Historial_Pedido SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
+    
     conn.commit()
 
     # Si el pedido llega al estado "Listo", eliminarlo

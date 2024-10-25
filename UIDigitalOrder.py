@@ -32,11 +32,8 @@ def diseño_boton(texto, tamaño=14):
 # Pantalla Inicial
 def pantalla_inicial(frame):
     
-    
     # Limpia la pantalla
     limpiar_pantalla(frame)
-
-    
 
     #logo de la app
     logo_label = QLabel()
@@ -93,7 +90,7 @@ def seleccionar_mesa(frame):
          boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))  
          boton_mesa.setStyleSheet("background-color: #ffffff;") 
          boton_mesa.setFixedSize(100, 40) 
-         print(f"Mesa {i} bloqueada: {pedido_activo}")
+         
          #Bloqueo de boton de la mesa
          if pedido_activo:
              boton_mesa.setEnabled(False)
@@ -402,17 +399,10 @@ def mostrar_pedidos(frame):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: pantalla_inicial(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
-    
-
 
 def confirmar_pedido(pedido_id, cocinero_combo):
     cocinero_seleccionado = cocinero_combo.currentText()
     print(f"Pedido {pedido_id} asignado a {cocinero_seleccionado}")
-
-
-
-
-
 
 def iniciar_sesion_cocinero(frame):
     # Limpia la pantalla
@@ -479,7 +469,6 @@ def confirmar_login_cocinero(entry_usuario, entry_contraseña,frame):
             mensaje_error = QLabel("Usuario y/o contraseña incorrectos")
             mensaje_error.setStyleSheet("color: red;")
             frame.layout().addWidget(mensaje_error)
-
 
 #Pantalla inicio de sesion Administrador
 def iniciar_sesion(frame):
