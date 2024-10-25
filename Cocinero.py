@@ -56,3 +56,23 @@ def validar_Cocinero (usuarioIngresado,contraseñaIngresado):
         #Llamamos la funcion para cambiar el GUI
     else:
         return False
+    
+#Funcion para mostrar Cocineros
+def obt_cocineros():
+    #Obtiene los datos de los cocineros de la base de datos
+    cursor.execute("SELECT id, usuario, contraseña FROM cocineros")  
+    cocineros = cursor.fetchall()
+    return cocineros
+
+#Funcion para Actualizar los Datos del Cocinero
+def modificar_cocinero (id_ingresado, nombre_nuevo = None, contraseña_nueva = None):
+    #Toma los datos ingresados en los campos y los actualiza en la base de datos tomando como referencia la id 
+    if nombre_nuevo != None and contraseña_nueva != None:
+        cursor.execute("UPDATE cocineros SET usuario = %s, contraseña = %s WHERE id = %s ", (nombre_nuevo, contraseña_nueva, id_ingresado))  
+    elif nombre_nuevo:
+        cursor.execute("UPDATE cocineros SET usuario = %s WHERE id = %s", (nombre_nuevo, id_ingresado))
+    elif contraseña_nueva:
+        cursor.execute("UPDATE cocineros SET contraseña = %s WHERE id = %s", (contraseña_nueva, id_ingresado))
+    else:
+        return "No hay valores que actualizar."
+    conn.commit()
