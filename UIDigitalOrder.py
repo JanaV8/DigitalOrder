@@ -93,7 +93,6 @@ def seleccionar_mesa(frame):
          boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))  
          boton_mesa.setStyleSheet("background-color: #ffffff;") 
          boton_mesa.setFixedSize(100, 40) 
-         print(f"Mesa {i} bloqueada: {pedido_activo}")
          #Bloqueo de boton de la mesa
          if pedido_activo:
              boton_mesa.setEnabled(False)
