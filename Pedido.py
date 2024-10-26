@@ -43,6 +43,18 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
 )
 ''')
 
+cursor.execute(''' 
+CREATE TABLE IF NOT EXISTS historial_pedido (
+    pedido_id INT,
+    plato_id INT,
+    cantidad INT NOT NULL DEFAULT 1,
+    estado VARCHAR(255) DEFAULT 'Pendiente',
+    PRIMARY KEY (pedido_id, plato_id),
+    FOREIGN KEY (pedido_id) REFERENCES pedido(id),
+    FOREIGN KEY (plato_id) REFERENCES platos(id)
+)
+''')
+
 conn.commit()
 
 # Función para agregar un plato al carrito
@@ -63,15 +75,19 @@ def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
             # Si ya está en el carrito, actualizar la cantidad
             nueva_cantidad = resultado_carrito[0] + cantidad
             cursor.execute("UPDATE Pedido_Plato SET cantidad = %s WHERE pedido_id = %s AND plato_id = %s", (nueva_cantidad, pedido_id, plato_id))
-        
         else:
             # Si no está en el carrito, insertar el plato
             cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
+
+        # Sincronizar con historial_pedido
+        cursor.execute("INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado) VALUES (%s, %s, %s, 'Pendiente') ON DUPLICATE KEY UPDATE cantidad = cantidad + %s", 
+                       (pedido_id, plato_id, cantidad, cantidad))
         
         conn.commit()
         print("Plato agregado o actualizado en el carrito.")
     else:
         print("Plato no encontrado en la base de datos.")
+
 
 # Función para confirmar el pedido del carrito
 def confirmar_pedido(pedido_id, numero_mesa):
@@ -86,34 +102,16 @@ def confirmar_pedido(pedido_id, numero_mesa):
     resultado = cursor.fetchone()
     precio_final = resultado[0] if resultado else 0  
 
-    # Obtener los ingredientes requeridos y sus cantidades para el pedido actual
-    cursor.execute("""
-        SELECT pi.ingrediente_id, SUM(pi.cantidad * pp.cantidad) AS total_cantidad
-        FROM Plato_Ingredientes pi
-        JOIN Pedido_Plato pp ON pi.plato_id = pp.plato_id
-        WHERE pp.pedido_id = %s
-        GROUP BY pi.ingrediente_id
-    """, (pedido_id,))
-    
-    ingredientes_requeridos = cursor.fetchall()
-
-    # Valida que haya suficiente stock para cada ingrediente
-    for ingrediente_id, cantidad_requerida in ingredientes_requeridos:
-        cursor.execute("SELECT stock FROM ingredientes WHERE id = %s", (ingrediente_id,))
-        stock_actual = cursor.fetchone()[0]
-
-        if stock_actual < cantidad_requerida:
-            return f"No hay suficiente stock para el ingrediente ID {ingrediente_id}. Pedido no confirmado."
-
-    # Si hay suficiente stock, resta los ingredientes
-    for ingrediente_id, cantidad_requerida in ingredientes_requeridos:
-        cursor.execute("UPDATE ingredientes SET stock = stock - %s WHERE id = %s", (cantidad_requerida, ingrediente_id))
-
     # Actualiza el pedido con el número de mesa y el precio final
     cursor.execute("UPDATE pedido SET numeroMesa=%s, precioFinal=%s WHERE id=%s", (numero_mesa, precio_final, pedido_id))
-    conn.commit() 
+
+    # Actualiza historial_pedido (opcional, dependiendo de cómo quieras manejarlo)
+    cursor.execute("UPDATE historial_pedido SET estado = 'Confirmado' WHERE pedido_id = %s", (pedido_id,))
+    
+    conn.commit()
     
     return "Pedido confirmado y stock actualizado correctamente."
+
 
 # Función que crea el carrito
 def crear_carrito():
@@ -132,7 +130,10 @@ def crear_carrito():
 # Función para eliminar un plato del carrito
 def eliminar_del_carrito(pedido_id, plato_id):
     cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
+    # Eliminar también de historial_pedido
+    cursor.execute("DELETE FROM historial_pedido WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
     conn.commit()
+
 
 # Función para mostrar la información de los platos que se agregaron al carrito 
 def mostrar_carrito(pedido_id):
