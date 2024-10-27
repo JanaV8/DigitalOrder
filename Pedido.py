@@ -43,16 +43,18 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
 )
 ''')
 
-cursor.execute(''' 
+# Crear la tabla Historial_Pedido_Plato
+cursor.execute('''
 CREATE TABLE IF NOT EXISTS historial_pedido (
-    pedido_id INT,
-    plato_id INT,
-    cantidad INT NOT NULL DEFAULT 1,
-    estado VARCHAR(255) DEFAULT 'Pendiente',
-    PRIMARY KEY (pedido_id, plato_id),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL,
+    plato_id INT NOT NULL,
+    cantidad INT DEFAULT 1,
+    estado VARCHAR(20) DEFAULT 'Pendiente',
     FOREIGN KEY (pedido_id) REFERENCES pedido(id),
     FOREIGN KEY (plato_id) REFERENCES platos(id)
-)
+);
+
 ''')
 
 conn.commit()
@@ -80,13 +82,17 @@ def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
             cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
 
         # Sincronizar con historial_pedido
-        cursor.execute("INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado) VALUES (%s, %s, %s, 'Pendiente') ON DUPLICATE KEY UPDATE cantidad = cantidad + %s", 
-                       (pedido_id, plato_id, cantidad, cantidad))
+        cursor.execute("""
+            INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado) 
+            VALUES (%s, %s, %s, 'Pendiente') 
+            ON DUPLICATE KEY UPDATE cantidad = cantidad + %s
+        """, (pedido_id, plato_id, cantidad, cantidad))
         
         conn.commit()
-        print("Plato agregado o actualizado en el carrito.")
+        print("Plato agregado o actualizado en el carrito y sincronizado en historial_pedido.")
     else:
         print("Plato no encontrado en la base de datos.")
+
 
 
 # Función para confirmar el pedido del carrito
@@ -162,29 +168,6 @@ def aumentar_cantidad(cantidad_existente, pedido_id, plato_id):
     cursor.execute("UPDATE Pedido_Plato SET cantidad=%s WHERE pedido_id=%s AND plato_id=%s", 
                    (nueva_cantidad, pedido_id, plato_id))
     conn.commit()
-
-def ver_pedidos():
-    cursor.execute('''
-        SELECT pedido.id, pedido.numeroMesa, platos.nombre, Pedido_Plato.cantidad
-        FROM pedido
-        JOIN Pedido_Plato ON pedido.id = Pedido_Plato.pedido_id
-        JOIN platos ON Pedido_Plato.plato_id = platos.id
-    ''')
-    
-    pedidos = cursor.fetchall()
-    pedidos_dict = {}
-    for pedido_id, numero_mesa, nombre_plato, cantidad in pedidos:
-        if pedido_id not in pedidos_dict:
-            pedidos_dict[pedido_id] = {
-                'numero_mesa': numero_mesa,
-                'platos': []
-            }
-        pedidos_dict[pedido_id]['platos'].append({'nombre': nombre_plato, 'cantidad': cantidad})
-
-    for pedido_id, detalles in pedidos_dict.items():
-        print(f"Pedido ID: {pedido_id}, Mesa: {detalles['numero_mesa']}")
-        for plato in detalles['platos']:
-            print(f"  Plato: {plato['nombre']}, Cantidad: {plato['cantidad']}")
             
 def obtener_pedidos():
     cursor.execute('''
@@ -194,6 +177,18 @@ def obtener_pedidos():
         JOIN platos ON Pedido_Plato.plato_id = platos.id
     ''')
     return cursor.fetchall()
+
+def obtener_historial():
+    cursor.execute('''
+        SELECT historial_pedido.pedido_id, pedido.numeroMesa, platos.nombre, historial_pedido.cantidad, historial_pedido.estado 
+        FROM historial_pedido
+        JOIN pedido ON historial_pedido.pedido_id = pedido.id 
+        JOIN platos ON historial_pedido.plato_id = platos.id
+    ''')
+    return cursor.fetchall()
+
+
+
 
 def actualizar_estado(pedido_id):
     cursor.execute("SELECT estado FROM Pedido_Plato WHERE pedido_id = %s", (pedido_id,))
@@ -223,6 +218,14 @@ def eliminar_pedido(pedido_id):
     cursor.execute("DELETE FROM pedido WHERE id = %s", (pedido_id,))
     conn.commit()
     print(f"Pedido {pedido_id} eliminado correctamente.")
+
+
+def eliminar_historial_pedido(pedido_id):
+    # Elimina el pedido del historial de pedidos
+    cursor.execute("DELETE FROM historial_pedido WHERE pedido_id = %s", (pedido_id,))
+    conn.commit()
+    print(f"Pedido {pedido_id} eliminado del historial correctamente.")
+
 
 def bloquear_mesa(mesa_id):
     try:
