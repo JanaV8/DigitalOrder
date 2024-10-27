@@ -452,7 +452,7 @@ def mostrar_historial_pedidos(frame):
         layout_pedido.addWidget(QLabel(f"Estado actual: {estado}"))
 
         # Botón para eliminar el pedido
-        confirmar_btn = QPushButton("Actualizar Pedido")
+        confirmar_btn = QPushButton("Eliminar Pedido")
         confirmar_btn.clicked.connect(lambda _, pid=pedido_id: [Pedido.eliminar_historial_pedido(pid), mostrar_historial_pedidos(frame)])
         layout_pedido.addWidget(confirmar_btn)
 
