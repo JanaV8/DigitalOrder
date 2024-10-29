@@ -1,7 +1,7 @@
 import pymysql
 
 # Conexión con la Base de Datos
-conn = pymysql.connect( 
+conn = pymysql.connect(
     host='26.92.40.13',
     user='root',
     password='',
@@ -31,11 +31,13 @@ CREATE TABLE IF NOT EXISTS pedido (
 ''')
 
 # Crear la tabla Pedido_Plato con la columna 'estado' ya incluida
+# Crear la tabla Pedido_Plato con la columna 'estado' ya incluida
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS Pedido_Plato (
     pedido_id INT,
     plato_id INT,
     cantidad INT NOT NULL DEFAULT 1,
+    estado VARCHAR(255) DEFAULT 'Pendiente',
     estado VARCHAR(255) DEFAULT 'Pendiente',
     PRIMARY KEY (pedido_id, plato_id),
     FOREIGN KEY (pedido_id) REFERENCES pedido(id),
@@ -57,6 +59,7 @@ CREATE TABLE IF NOT EXISTS historial_pedido (
 
 conn.commit()
 
+# Función para agregar un plato al carrito
 # Función para agregar un plato al carrito
 def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
     try:
@@ -139,6 +142,7 @@ def crear_carrito():
     except pymysql.MySQLError as e:
         print(f"Error en crear_carrito: {e}")    
 
+# Función para eliminar un plato del carrito
 # Función para eliminar un plato del carrito
 def eliminar_del_carrito(pedido_id, plato_id):
     try:
@@ -259,12 +263,14 @@ def actualizar_estado(pedido_id):
 
 def eliminar_pedido(pedido_id):
     cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id = %s", (pedido_id,))
+    cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id = %s", (pedido_id,))
     cursor.execute("DELETE FROM pedido WHERE id = %s", (pedido_id,))
     conn.commit()
     print(f"Pedido {pedido_id} eliminado correctamente.")
 
 def bloquear_mesa(mesa_id):
     try:
+        cursor.execute("SELECT id FROM pedido WHERE numeroMesa = %s", (mesa_id,))
         cursor.execute("SELECT id FROM pedido WHERE numeroMesa = %s", (mesa_id,))
         pedido = cursor.fetchone()
         return pedido is not None

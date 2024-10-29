@@ -8,9 +8,10 @@ import Cocinero
 import Plato
 import Pedido
 import Ingredientes
+import Mozo
 import sys
 
-# Función para limpiar la pantalla (elimina todos los widgets)
+ # Función para limpiar la pantalla (elimina todos los widgets)
 def limpiar_pantalla(contenedor):
     while contenedor.count():
         child = contenedor.takeAt(0)
@@ -23,11 +24,10 @@ def limpiar_pantalla(contenedor):
 def diseño_boton(texto, tamaño=14):
     boton = QPushButton(texto)
     boton.setFont(QFont("Helvetica", tamaño, QFont.Bold))
-    boton.setStyleSheet(f"background-image: url(Iconos//Fondo Boton.png); "
+    boton.setStyleSheet(f"background-image: url(DigitalOrder//Iconos//Fondo Boton.png); "
                         "color: #ffffff; border: none;")
     boton.setFixedSize(180, 50)  # Ajusta el tamaño del botón
     return boton
-
 
 # Pantalla Inicial
 def pantalla_inicial(frame):
@@ -37,7 +37,7 @@ def pantalla_inicial(frame):
 
     #logo de la app
     logo_label = QLabel()
-    pixmap = QPixmap("Iconos\\Digital Order Logo.png")
+    pixmap = QPixmap("DigitalOrder\\Iconos\\Digital Order Logo.png")
     pixmap_redimensionado = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     logo_label.setPixmap(pixmap_redimensionado)
     logo_label.setAlignment(Qt.AlignCenter)
@@ -60,7 +60,7 @@ def pantalla_inicial(frame):
 
     # Carga la imagen de Chef y la redimensiona
     imagen_label = QLabel()
-    pixmap = QPixmap("Iconos\\Chef.png")
+    pixmap = QPixmap("DigitalOrder\\Iconos\\Chef.png")
     pixmap_redimensionado = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     imagen_label.setPixmap(pixmap_redimensionado)
     imagen_label.setAlignment(Qt.AlignCenter)
@@ -398,10 +398,81 @@ def mostrar_pedidos(frame):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: pantalla_inicial(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
-
+    
 def confirmar_pedido(pedido_id, cocinero_combo):
     cocinero_seleccionado = cocinero_combo.currentText()
     print(f"Pedido {pedido_id} asignado a {cocinero_seleccionado}")
+
+def mostrar_historial_pedidos(frame):
+    # Consulta para obtener los pedidos
+    pedidos = Pedido.obtener_historial()  # Usamos el método que ya tienes para obtener los pedidos
+    
+    # Limpiar la pantalla
+    limpiar_pantalla(frame)
+
+    # Crear un QScrollArea para los pedidos
+    scroll_area = QScrollArea()
+    scroll_area.setWidgetResizable(True)
+
+    # Crear el widget que contendrá los pedidos
+    scroll_content = QWidget()
+    scroll_layout = QVBoxLayout(scroll_content)
+
+    # Agrupar los pedidos por ID
+    pedidos_dict = {}
+    for pedido in pedidos:
+        pedido_id, numero_mesa, plato, cantidad, estado = pedido
+        if pedido_id not in pedidos_dict:
+            pedidos_dict[pedido_id] = {
+                'numero_mesa': numero_mesa,
+                'platos': {},
+                'estado': estado
+            }
+        # Aquí sumamos la cantidad si el plato ya existe en el diccionario
+        if plato in pedidos_dict[pedido_id]['platos']:
+            pedidos_dict[pedido_id]['platos'][plato] += cantidad
+        else:
+            pedidos_dict[pedido_id]['platos'][plato] = cantidad
+
+    # Layout para los pedidos agrupados
+    for pedido_id, detalles in pedidos_dict.items():
+        numero_mesa = detalles['numero_mesa']
+        estado = detalles['estado']
+        platos = detalles['platos']
+
+        # Crear una caja para cada pedido
+        group_box = QGroupBox(f"Pedido #{pedido_id} - Mesa: {numero_mesa}")
+        layout_pedido = QVBoxLayout()
+
+        # Mostrar platos del pedido
+        for plato, cantidad in platos.items():
+            layout_pedido.addWidget(QLabel(f"Plato: {plato}, Cantidad: {cantidad}"))
+
+        # Mostrar el estado actual del pedido
+        layout_pedido.addWidget(QLabel(f"Estado actual: {estado}"))
+
+        # Botón para eliminar el pedido
+        confirmar_btn = QPushButton("Eliminar Pedido")
+        confirmar_btn.clicked.connect(lambda _, pid=pedido_id: [Pedido.eliminar_historial_pedido(pid), mostrar_historial_pedidos(frame)])
+        layout_pedido.addWidget(confirmar_btn)
+
+        # Añadir el layout del pedido al group box
+        group_box.setLayout(layout_pedido)
+        # Añadir el group_box al layout scroll
+        scroll_layout.addWidget(group_box)  
+
+    # Establecer el widget de contenido desplazable en el área de scroll
+    scroll_content.setLayout(scroll_layout)
+    scroll_area.setWidget(scroll_content)
+
+    # Añadir el área de scroll al frame principal
+    frame.addWidget(scroll_area)
+    
+    # Botón para volver a la pantalla inicial
+    boton_volver = diseño_boton("Volver")
+    boton_volver.clicked.connect(lambda: menu_admin(frame))
+    frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
 
 def iniciar_sesion_cocinero(frame):
     # Limpia la pantalla
@@ -567,12 +638,28 @@ def menu_admin(frame):
     boton_modificar_admin.clicked.connect(lambda: modificar_admin(frame))
     h_layout_admin.addWidget(boton_modificar_admin)
 
+    boton_agregar_cocinero=diseño_boton("Agregar \n Cocinero")
+    boton_agregar_cocinero.clicked.connect(lambda: agregar_cocinero(frame))
+    h_layout_admin.addWidget(boton_agregar_cocinero)
+
+    boton_modificar_cocinero=diseño_boton("Modificar \n  Cocinero")
+    boton_modificar_cocinero.clicked.connect(lambda: modificar_cocinero(frame))
+    h_layout_admin.addWidget(boton_modificar_cocinero)
+
     # Agregar el layout horizontal al frame
     frame.addLayout(h_layout_admin)
 
     # Crear un layout horizontal para los botones de editar
     h_layout_editar = QHBoxLayout()
     
+    boton_agregar_mozo=diseño_boton("Agregar Mozo")
+    boton_agregar_mozo.clicked.connect(lambda: agregar_mozo(frame))
+    h_layout_editar.addWidget(boton_agregar_mozo)
+    
+    boton_modificar_mozo=diseño_boton("Modificar Mozo")
+    boton_modificar_mozo.clicked.connect(lambda: modificar_mozo(frame))
+    h_layout_editar.addWidget(boton_modificar_mozo)
+
     # Botón para editar menú
     boton_editar_menu = diseño_boton("Editar Menú")
     boton_editar_menu.clicked.connect(lambda: editar_menu(frame))
@@ -585,6 +672,12 @@ def menu_admin(frame):
 
     # Agregar el layout horizontal al frame
     frame.addLayout(h_layout_editar)
+
+    historial_layout = QHBoxLayout()
+    boton_historial = diseño_boton("Historial  \n de Pedidos")
+    boton_historial.clicked.connect(lambda: mostrar_historial_pedidos(frame))
+    historial_layout.addWidget(boton_historial)
+    frame.addLayout(historial_layout)
 
     # Botón para volver atrás
     boton_volver = diseño_boton("Volver")
@@ -1029,6 +1122,314 @@ def editar_ingredientes(frame):
     # Alinear el layout de botones al centro
     button_layout.setAlignment(Qt.AlignCenter) 
 
+def agregar_cocinero(frame):
+    #Limpia la Pantalla
+    limpiar_pantalla(frame)
+
+    # Etiqueta de agregar Cocinero
+    label_menu = QLabel("Agregar Cocinero")
+    label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
+    label_menu.setAlignment(Qt.AlignCenter)
+    frame.addWidget(label_menu)
+
+    # Campo de usuario
+    usuario = QLabel("Usuario:")
+    usuario.setFont(QFont("Helvetica", 14))
+    usuario.setAlignment(Qt.AlignCenter)
+    frame.addWidget(usuario)
+    entry_usuario = QLineEdit()
+    entry_usuario.setFixedSize(200, 30)  # Establece un ancho de 200 y un alto de 30
+    entry_usuario.setStyleSheet("background-color: white;")
+    frame.addWidget(entry_usuario, alignment=Qt.AlignCenter)
+
+    # Campo de contraseña
+    contraseña = QLabel("Contraseña (DNI):")
+    contraseña.setFont(QFont("Helvetica", 14))
+    contraseña.setAlignment(Qt.AlignCenter)
+    frame.addWidget(contraseña)
+    entry_contraseña = QLineEdit()
+    entry_contraseña.setFixedSize(200, 30)  # Establece un ancho de 200 y un alto de 30
+    entry_contraseña.setStyleSheet("background-color: white;")
+    frame.addWidget(entry_contraseña,alignment=Qt.AlignCenter)
+
+    # Boton agregar cocinero
+    boton_agregar=diseño_boton("Agregar")
+    boton_agregar.clicked.connect(lambda: Cocinero.agregar_Cocineros(entry_usuario.text(),entry_contraseña.text()))
+    frame.addWidget(boton_agregar, alignment=Qt.AlignCenter)
+
+    # Botón para volver al menu del administrador
+    boton_volver = diseño_boton("Volver")
+    boton_volver.clicked.connect(lambda: menu_admin(frame))
+    frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
+def modificar_cocinero(frame):
+    # Limpia la Pantalla
+    limpiar_pantalla(frame)
+
+    # Etiqueta de modificar Cocinero
+    label_menu = QLabel("Modificar Cocinero")
+    label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
+    label_menu.setAlignment(Qt.AlignCenter)
+    frame.addWidget(label_menu)
+
+    # Crea una tabla para mostrar los Cocinero
+    table = QtWidgets.QTableWidget()
+    table.setColumnCount(3)
+    table.setHorizontalHeaderLabels(["ID", "Usuario", "Contraseña"])
+    table.verticalHeader().setVisible(False)
+    table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+
+    # Ajustar el ancho de las columnas
+    table.setColumnWidth(0, 100)  
+    table.setColumnWidth(1, 300)  
+    table.setColumnWidth(2, 300)  
+
+    # Fija un tamaño mínimo para la tabla
+    table.setMinimumSize(700, 250)
+
+    # Hace que las columnas se ajusten automáticamente
+    header = table.horizontalHeader()
+    header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+
+    table.setStyleSheet("background: #FFDBB8;")
+    
+    # Crea un layout horizontal para la tabla y los inputs
+    main_layout = QtWidgets.QHBoxLayout()
+
+    # Añade la tabla al layout principal
+    main_layout.addWidget(table, alignment=Qt.AlignCenter)
+
+    # Crea un layout vertical para los labels y los LineEdits
+    input_layout = QtWidgets.QVBoxLayout()
+
+    # Inputs ID
+    label_id = QLabel("ID")
+    label_id.setFont(QFont("Helvetica", 12, QFont.Bold))
+    input_layout.addWidget(label_id, alignment=Qt.AlignCenter)
+    id_ingresado = QtWidgets.QLineEdit()
+    id_ingresado.setStyleSheet("background-color: white;")
+    input_layout.addWidget(id_ingresado, alignment=Qt.AlignCenter)
+
+    #Inputs Nombre
+    label_nombre = QLabel("Nombre")
+    label_nombre.setFont(QFont("Helvetica", 12, QFont.Bold))
+    input_layout.addWidget(label_nombre, alignment=Qt.AlignCenter)
+    nombre_nuevo = QtWidgets.QLineEdit()
+    nombre_nuevo.setStyleSheet("background-color: white;")
+    input_layout.addWidget(nombre_nuevo, alignment=Qt.AlignCenter)
+
+    #Inputs Contraseña
+    label_contraseña = QLabel("Contraseña")
+    label_contraseña.setFont(QFont("Helvetica", 12, QFont.Bold))
+    input_layout.addWidget(label_contraseña, alignment=Qt.AlignCenter)
+    contraseña_nueva = QtWidgets.QLineEdit()
+    contraseña_nueva.setStyleSheet("background-color: white;")
+    input_layout.addWidget(contraseña_nueva, alignment=Qt.AlignCenter)
+
+    # Añade el layout de inputs al layout principal
+    main_layout.addLayout(input_layout)
+
+    # Añade el layout principal al frame
+    frame.addLayout(main_layout)
+
+    # Carga los Cocinero
+    cocinero = Cocinero.obt_cocineros()
+
+    table.setRowCount(len(cocinero))
+    for row, admin in enumerate(cocinero):
+        for col, value in enumerate(admin):
+            table.setItem(row, col, QtWidgets.QTableWidgetItem(str(value)))
+
+    # Función para manejar la selección de la tabla
+    def on_select():
+        selected = table.selectedItems()
+        if selected:
+            id_ingresado.setText(selected[0].text())
+            nombre_nuevo.setText(selected[1].text())
+            contraseña_nueva.setText(selected[2].text())
+
+    table.itemSelectionChanged.connect(on_select)
+
+    # Crea un layout horizontal para los botones
+    button_layout = QtWidgets.QHBoxLayout()
+
+    # Botón para modificar
+    btn_modificar = diseño_boton("Modificar")
+    btn_modificar.clicked.connect(lambda: [Cocinero.modificar_cocinero(id_ingresado.text(), nombre_nuevo.text(), contraseña_nueva.text()),
+                                           actualizar_tabla(table, Cocinero.obt_cocineros)])
+    button_layout.addWidget(btn_modificar)
+
+    # Botón para eliminar
+    btn_eliminar = diseño_boton("Eliminar")
+    btn_eliminar.clicked.connect(lambda: [Cocinero.eliminar_Cocineros(id_ingresado.text()),
+                                          actualizar_tabla(table, Cocinero.obt_cocineros)])
+    button_layout.addWidget(btn_eliminar)
+
+    # Botón para volver al menu del administrador
+    boton_volver = diseño_boton("Volver")
+    boton_volver.clicked.connect(lambda: menu_admin(frame))
+    button_layout.addWidget(boton_volver)
+
+    # Añade el layout de botones debajo de la tabla
+    frame.addLayout(button_layout)
+
+    # Alinea el layout de botones al centro
+    button_layout.setAlignment(Qt.AlignCenter)
+
+def agregar_mozo(frame):
+    #Limpia la Pantalla
+    limpiar_pantalla(frame)
+
+    # Etiqueta de agregar Mozo
+    label_menu = QLabel("Agregar Mozo")
+    label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
+    label_menu.setAlignment(Qt.AlignCenter)
+    frame.addWidget(label_menu)
+
+    # Campo de usuario
+    usuario = QLabel("Usuario:")
+    usuario.setFont(QFont("Helvetica", 14))
+    usuario.setAlignment(Qt.AlignCenter)
+    frame.addWidget(usuario)
+    entry_usuario = QLineEdit()
+    entry_usuario.setFixedSize(200, 30)  # Establece un ancho de 200 y un alto de 30
+    entry_usuario.setStyleSheet("background-color: white;")
+    frame.addWidget(entry_usuario, alignment=Qt.AlignCenter)
+
+    # Campo de contraseña
+    contraseña = QLabel("Contraseña (DNI):")
+    contraseña.setFont(QFont("Helvetica", 14))
+    contraseña.setAlignment(Qt.AlignCenter)
+    frame.addWidget(contraseña)
+    entry_contraseña = QLineEdit()
+    entry_contraseña.setFixedSize(200, 30)  # Establece un ancho de 200 y un alto de 30
+    entry_contraseña.setStyleSheet("background-color: white;")
+    frame.addWidget(entry_contraseña,alignment=Qt.AlignCenter)
+
+    # Boton agregar Mozo
+    boton_agregar=diseño_boton("Agregar")
+    boton_agregar.clicked.connect(lambda: Mozo.agregar_mozo(entry_usuario.text(),entry_contraseña.text()))
+    frame.addWidget(boton_agregar, alignment=Qt.AlignCenter)
+
+    # Botón para volver al menu del administrador
+    boton_volver = diseño_boton("Volver")
+    boton_volver.clicked.connect(lambda: menu_admin(frame))
+    frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
+def modificar_mozo(frame):
+   # Limpia la Pantalla
+    limpiar_pantalla(frame)
+
+    # Etiqueta de modificar Mozo
+    label_menu = QLabel("Modificar Mozo")
+    label_menu.setFont(QFont("Helvetica", 18, QFont.Bold))
+    label_menu.setAlignment(Qt.AlignCenter)
+    frame.addWidget(label_menu)
+
+    # Crea una tabla para mostrar los Mozo
+    table = QtWidgets.QTableWidget()
+    table.setColumnCount(3)
+    table.setHorizontalHeaderLabels(["ID", "Usuario", "Contraseña"])
+    table.verticalHeader().setVisible(False)
+    table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+
+    # Ajustar el ancho de las columnas
+    table.setColumnWidth(0, 100)  
+    table.setColumnWidth(1, 300)  
+    table.setColumnWidth(2, 300)  
+
+    # Fija un tamaño mínimo para la tabla
+    table.setMinimumSize(700, 250)
+
+    # Hace que las columnas se ajusten automáticamente
+    header = table.horizontalHeader()
+    header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+
+    table.setStyleSheet("background: #FFDBB8;")
+    
+    # Crea un layout horizontal para la tabla y los inputs
+    main_layout = QtWidgets.QHBoxLayout()
+
+    # Añade la tabla al layout principal
+    main_layout.addWidget(table, alignment=Qt.AlignCenter)
+
+    # Crea un layout vertical para los labels y los LineEdits
+    input_layout = QtWidgets.QVBoxLayout()
+
+    # Inputs ID
+    label_id = QLabel("ID")
+    label_id.setFont(QFont("Helvetica", 12, QFont.Bold))
+    input_layout.addWidget(label_id, alignment=Qt.AlignCenter)
+    id_ingresado = QtWidgets.QLineEdit()
+    id_ingresado.setStyleSheet("background-color: white;")
+    input_layout.addWidget(id_ingresado, alignment=Qt.AlignCenter)
+
+    #Inputs Nombre
+    label_nombre = QLabel("Nombre")
+    label_nombre.setFont(QFont("Helvetica", 12, QFont.Bold))
+    input_layout.addWidget(label_nombre, alignment=Qt.AlignCenter)
+    nombre_nuevo = QtWidgets.QLineEdit()
+    nombre_nuevo.setStyleSheet("background-color: white;")
+    input_layout.addWidget(nombre_nuevo, alignment=Qt.AlignCenter)
+
+    #Inputs Contraseña
+    label_contraseña = QLabel("Contraseña")
+    label_contraseña.setFont(QFont("Helvetica", 12, QFont.Bold))
+    input_layout.addWidget(label_contraseña, alignment=Qt.AlignCenter)
+    contraseña_nueva = QtWidgets.QLineEdit()
+    contraseña_nueva.setStyleSheet("background-color: white;")
+    input_layout.addWidget(contraseña_nueva, alignment=Qt.AlignCenter)
+
+    # Añade el layout de inputs al layout principal
+    main_layout.addLayout(input_layout)
+
+    # Añade el layout principal al frame
+    frame.addLayout(main_layout)
+
+    # Carga los Mozo
+    mozo = Mozo.obtener_mozos()
+
+    table.setRowCount(len(mozo))
+    for row, admin in enumerate(mozo):
+        for col, value in enumerate(admin):
+            table.setItem(row, col, QtWidgets.QTableWidgetItem(str(value)))
+
+    # Función para manejar la selección de la tabla
+    def on_select():
+        selected = table.selectedItems()
+        if selected:
+            id_ingresado.setText(selected[0].text())
+            nombre_nuevo.setText(selected[1].text())
+            contraseña_nueva.setText(selected[2].text())
+
+    table.itemSelectionChanged.connect(on_select)
+
+    # Crea un layout horizontal para los botones
+    button_layout = QtWidgets.QHBoxLayout()
+
+    # Botón para modificar
+    btn_modificar = diseño_boton("Modificar")
+    btn_modificar.clicked.connect(lambda: [Mozo.actualizar_mozo(id_ingresado.text(), nombre_nuevo.text(), contraseña_nueva.text()),
+                                           actualizar_tabla(table, Mozo.obtener_mozos)])
+    button_layout.addWidget(btn_modificar)
+
+    # Botón para eliminar
+    btn_eliminar = diseño_boton("Eliminar")
+    btn_eliminar.clicked.connect(lambda: [Mozo.eliminar_mozo(id_ingresado.text()),
+                                          actualizar_tabla(table, Mozo.obtener_mozos)])
+    button_layout.addWidget(btn_eliminar)
+
+    # Botón para volver al menu del administrador
+    boton_volver = diseño_boton("Volver")
+    boton_volver.clicked.connect(lambda: menu_admin(frame))
+    button_layout.addWidget(boton_volver)
+
+    # Añade el layout de botones debajo de la tabla
+    frame.addLayout(button_layout)
+
+    # Alinea el layout de botones al centro
+    button_layout.setAlignment(Qt.AlignCenter) 
+
 # Creación de la ventana
 def pantalla_principal():
     # Crear la aplicación
@@ -1039,7 +1440,7 @@ def pantalla_principal():
 
     # Configuración de la ventana
     pantalla.setWindowTitle("Digital Order")
-    pantalla.setWindowIcon(QIcon('Iconos\\DigitalOrder.png'))
+    pantalla.setWindowIcon(QIcon('DigitalOrder\\Iconos\\DigitalOrder.png'))
 
     # Tamaño de la ventana
     ancho, alto = 800, 700
