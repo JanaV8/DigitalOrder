@@ -1,7 +1,7 @@
 import pymysql
 
 # Conexión con la Base de Datos
-conn = pymysql.connect(
+
 conn = pymysql.connect(
     host='26.92.40.13',
     user='root',
@@ -67,25 +67,28 @@ def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
         cursor.execute("SELECT id FROM platos WHERE nombre = %s", (nombre_plato,))
         resultado = cursor.fetchone()
 
-    if resultado:
-        plato_id = resultado[0]
-        cursor.execute("SELECT cantidad FROM Pedido_Plato WHERE pedido_id = %s AND plato_id = %s", (pedido_id, plato_id))
-        resultado_carrito = cursor.fetchone()
+        if resultado:
+            plato_id = resultado[0]
+            cursor.execute("SELECT cantidad FROM Pedido_Plato WHERE pedido_id = %s AND plato_id = %s", (pedido_id, plato_id))
+            resultado_carrito = cursor.fetchone()
 
-        if resultado_carrito:
-            nueva_cantidad = resultado_carrito[0] + cantidad
-            cursor.execute("UPDATE Pedido_Plato SET cantidad = %s WHERE pedido_id = %s AND plato_id = %s", (nueva_cantidad, pedido_id, plato_id))
+            if resultado_carrito:
+                nueva_cantidad = resultado_carrito[0] + cantidad
+                cursor.execute("UPDATE Pedido_Plato SET cantidad = %s WHERE pedido_id = %s AND plato_id = %s", (nueva_cantidad, pedido_id, plato_id))
+            else:
+                cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
+
+            # Se inserta en el historial sin restricciones
+            cursor.execute("INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado) VALUES (%s, %s, %s, 'Confirmado')", (pedido_id, plato_id, cantidad))
+
+            conn.commit()
+            print("Plato agregado o actualizado en el carrito y sincronizado en historial_pedido.")
         else:
-            cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
-
-        # Se inserta en el historial sin restricciones
-        cursor.execute("INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado) VALUES (%s, %s, %s, 'Confirmado')", (pedido_id, plato_id, cantidad))
-
-        conn.commit()
-        print("Plato agregado o actualizado en el carrito y sincronizado en historial_pedido.")
-    else:
-        print("Plato no encontrado en la base de datos.")
-
+            print("Plato no encontrado en la base de datos.")
+    # Cracion de excepciones para los posibles errores 
+    except pymysql.MySQLError as e:
+        print(f"Error en reducir_cantidad: {e}")
+       
 # Función para confirmar el pedido del carrito
 def confirmar_pedido(pedido_id, numero_mesa):
     # Verificar si hay un pedido activo con el mismo numeroMesa
@@ -211,29 +214,30 @@ def obtener_historial():
 
 # Actualizar el estado de un pedido
 def actualizar_estado(pedido_id):
-    cursor.execute("SELECT estado FROM Pedido_Plato WHERE pedido_id = %s", (pedido_id,))
-    resultado = cursor.fetchone()
-    if resultado:
-        estado_actual = resultado[0]
-    else:
-        print(f"No se encontró el pedido con ID {pedido_id}.")
-        return False   
+    try:
+        cursor.execute("SELECT estado FROM Pedido_Plato WHERE pedido_id = %s", (pedido_id,))
+        resultado = cursor.fetchone()
+        if resultado:
+            estado_actual = resultado[0]
+        else:
+            print(f"No se encontró el pedido con ID {pedido_id}.")
+            return False   
 
-    # Verificar el estado y actualizar
-    if estado_actual == "Pendiente":
-        nuevo_estado = "En preparación"
-    elif estado_actual == "En preparación":
-        nuevo_estado = "Listo"
-    elif estado_actual == "Listo":
-        # Eliminar el pedido solo al confirmar nuevamente
-        eliminar_pedido(pedido_id)  # O simplemente puedes no hacer nada aquí y dejar el pedido en la tabla
-        return True 
-    else:
-        return False  
+        # Verificar el estado y actualizar
+        if estado_actual == "Pendiente":
+            nuevo_estado = "En preparación"
+        elif estado_actual == "En preparación":
+            nuevo_estado = "Listo"
+        elif estado_actual == "Listo":
+            # Eliminar el pedido solo al confirmar nuevamente
+            eliminar_pedido(pedido_id)  # O simplemente puedes no hacer nada aquí y dejar el pedido en la tabla
+            return True 
+        else:
+            return False  
 
-        cursor.execute("UPDATE Pedido_Plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
-        conn.commit()
-    # Cracion de excepciones para los posibles errores
+            cursor.execute("UPDATE Pedido_Plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
+            conn.commit()
+        # Cracion de excepciones para los posibles errores
     except pymysql.MySQLError as e:
         print(f"Error en actualizar_estado: {e}")    
 
