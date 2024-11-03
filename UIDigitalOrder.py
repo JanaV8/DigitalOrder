@@ -436,12 +436,11 @@ def mostrar_historial_pedidos(frame):
 
     # Layout para los pedidos agrupados
     for pedido_id, detalles in pedidos_dict.items():
-        numero_mesa = detalles['numero_mesa']
         estado = detalles['estado']
         platos = detalles['platos']
 
         # Crear una caja para cada pedido
-        group_box = QGroupBox(f"Pedido #{pedido_id} - Mesa: {numero_mesa}")
+        group_box = QGroupBox(f"Pedido #{pedido_id}")  # Eliminar número de mesa de la etiqueta
         layout_pedido = QVBoxLayout()
 
         # Mostrar platos del pedido
@@ -450,11 +449,6 @@ def mostrar_historial_pedidos(frame):
 
         # Mostrar el estado actual del pedido
         layout_pedido.addWidget(QLabel(f"Estado actual: {estado}"))
-
-        # Botón para eliminar el pedido
-        confirmar_btn = QPushButton("Eliminar Pedido")
-        confirmar_btn.clicked.connect(lambda _, pid=pedido_id: [Pedido.eliminar_historial_pedido(pid), mostrar_historial_pedidos(frame)])
-        layout_pedido.addWidget(confirmar_btn)
 
         # Añadir el layout del pedido al group box
         group_box.setLayout(layout_pedido)
@@ -472,6 +466,7 @@ def mostrar_historial_pedidos(frame):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
 
 
 def iniciar_sesion_cocinero(frame):
