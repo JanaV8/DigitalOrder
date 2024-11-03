@@ -2,6 +2,7 @@ import pymysql
 
 # Conexión con la Base de Datos
 conn = pymysql.connect(
+conn = pymysql.connect(
     host='26.92.40.13',
     user='root',
     password='',
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS Pedido_Plato (
     plato_id INT,
     cantidad INT NOT NULL DEFAULT 1,
     estado VARCHAR(255) DEFAULT 'Pendiente',
+    estado VARCHAR(255) DEFAULT 'Pendiente',
     PRIMARY KEY (pedido_id, plato_id),
     FOREIGN KEY (pedido_id) REFERENCES pedido(id),
     FOREIGN KEY (plato_id) REFERENCES platos(id)
@@ -58,10 +60,12 @@ CREATE TABLE IF NOT EXISTS historial_pedido (
 conn.commit()
 
 # Función para agregar un plato al carrito
+# Función para agregar un plato al carrito
 def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
-    # Busca la ID del plato mediante su nombre
-    cursor.execute("SELECT id FROM platos WHERE nombre = %s", (nombre_plato,))
-    resultado = cursor.fetchone()
+    try:
+        # Busca la ID del plato mediante su nombre
+        cursor.execute("SELECT id FROM platos WHERE nombre = %s", (nombre_plato,))
+        resultado = cursor.fetchone()
 
     if resultado:
         plato_id = resultado[0]
@@ -140,6 +144,7 @@ def crear_carrito():
         return cursor.lastrowid
 
 # Función para eliminar un plato del carrito
+# Función para eliminar un plato del carrito
 def eliminar_del_carrito(pedido_id, plato_id):
     cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
     cursor.execute("DELETE FROM historial_pedido WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
@@ -157,14 +162,19 @@ def mostrar_carrito(pedido_id):
 
 # Función para reducir la cantidad de un plato en el carrito; si la cantidad llega a 0 lo elimina 
 def reducir_cantidad(cantidad_existente, pedido_id, plato_id):
-    reducir = 1
-    nueva_cantidad = cantidad_existente - reducir
-    if nueva_cantidad <= 0:
-        cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
-    else:
-        cursor.execute("UPDATE Pedido_Plato SET cantidad=%s WHERE pedido_id=%s AND plato_id=%s", 
-                       (nueva_cantidad, pedido_id, plato_id))
-    conn.commit()
+    try:
+        reducir = 1
+        nueva_cantidad = cantidad_existente - reducir
+        if nueva_cantidad <= 0:
+            cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
+        else:
+            cursor.execute("UPDATE Pedido_Plato SET cantidad=%s WHERE pedido_id=%s AND plato_id=%s", 
+                        (nueva_cantidad, pedido_id, plato_id))
+        conn.commit()
+    # Cracion de excepciones para los posibles errores 
+    except pymysql.MySQLError as e:
+        print(f"Error en reducir_cantidad: {e}")
+    
 
 # Función para aumentar la cantidad de un plato en el carrito
 def aumentar_cantidad(cantidad_existente, pedido_id, plato_id):
@@ -221,8 +231,11 @@ def actualizar_estado(pedido_id):
     else:
         return False  
 
-    cursor.execute("UPDATE Pedido_Plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
-    conn.commit()
+        cursor.execute("UPDATE Pedido_Plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
+        conn.commit()
+    # Cracion de excepciones para los posibles errores
+    except pymysql.MySQLError as e:
+        print(f"Error en actualizar_estado: {e}")    
 
 # Eliminar un pedido
 def eliminar_pedido(pedido_id):
@@ -244,8 +257,10 @@ def eliminar_pedido(pedido_id):
 def bloquear_mesa(mesa_id):
     try:
         cursor.execute("SELECT id FROM pedido WHERE numeroMesa = %s", (mesa_id,))
+        cursor.execute("SELECT id FROM pedido WHERE numeroMesa = %s", (mesa_id,))
         pedido = cursor.fetchone()
         return pedido is not None
+    # Cracion de excepciones para los posibles errores
     # Cracion de excepciones para los posibles errores
     except pymysql.MySQLError as e:
         print(f"Error en la consulta: {e}")
