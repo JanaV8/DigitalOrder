@@ -147,7 +147,6 @@ def crear_carrito():
         return cursor.lastrowid
 
 # Función para eliminar un plato del carrito
-# Función para eliminar un plato del carrito
 def eliminar_del_carrito(pedido_id, plato_id):
     cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
     cursor.execute("DELETE FROM historial_pedido WHERE pedido_id=%s AND plato_id=%s", (pedido_id, plato_id))
@@ -235,8 +234,8 @@ def actualizar_estado(pedido_id):
         else:
             return False  
 
-            cursor.execute("UPDATE Pedido_Plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
-            conn.commit()
+        cursor.execute("UPDATE Pedido_Plato SET estado = %s WHERE pedido_id = %s", (nuevo_estado, pedido_id))
+        conn.commit()
         # Cracion de excepciones para los posibles errores
     except pymysql.MySQLError as e:
         print(f"Error en actualizar_estado: {e}")    
