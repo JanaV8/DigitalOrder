@@ -2,7 +2,7 @@ import os
 from PyQt5.QtWidgets import (QLabel, QPushButton, QVBoxLayout, QApplication, QMainWindow, QWidget, QGridLayout, QLineEdit, QListWidgetItem, QListWidget,QHBoxLayout, 
                              QFileDialog, QTableWidgetItem, QMessageBox)
 from PyQt5.QtWidgets import QWidget, QVBoxLayout,QScrollArea, QPushButton,QComboBox,QGroupBox
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QBrush, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
 import Administrador
@@ -86,7 +86,7 @@ def seleccionar_mesa(frame):
 
     # Contenedor para la imagen de fondo
     fondo_label = QLabel()
-    fondo_label.setPixmap(QPixmap("Digital Order/Iconos/Plano.png"))
+    fondo_label.setPixmap(QPixmap("Digital Order\\Iconos\\Plano.png"))
     fondo_label.setScaledContents(True)
 
     # Crea un layout en forma de cuadrícula y lo asigna al fondo_label
@@ -139,7 +139,7 @@ def mostrar_menu(frame, mesa):
     frame.addWidget(lista_platos)
 
     # Muestra la base de datos de Platos
-    platos = Plato.mostrar_menu()  
+    platos = Plato.mostrar_menu()
 
     # Función para crear un widget personalizado para cada plato
     def item_personalizado(nombre, descripcion, precio, imagen):
@@ -182,11 +182,21 @@ def mostrar_menu(frame, mesa):
         return widget
 
     # Cargar los platos a la lista
-    for nombre, descripcion, precio, imagen in platos:
+    for plato in platos:
+        nombre, descripcion, precio, imagen = plato
         item = QListWidgetItem(lista_platos)  
         widget_personalizado = item_personalizado(nombre, descripcion, precio, imagen)
         lista_platos.setItemWidget(item, widget_personalizado)
         item.setSizeHint(widget_personalizado.sizeHint())
+        
+        # Verificar disponibilidad del plato
+        disponible = Plato.plato_disponible(nombre)
+        if disponible:
+            item.setFlags(item.flags() | Qt.ItemIsEnabled)   # Activa el elemento
+            item.setForeground(QBrush(QColor("green")))      # Restaura el color original
+        else:
+            item.setFlags(item.flags() & ~Qt.ItemIsEnabled)  # Desactiva el elemento
+            item.setForeground(QBrush(QColor("red")))       # Cambia el color para indicar desactivación
 
     # Aplica el estilo hover a la lista
     lista_platos.setStyleSheet("""
@@ -241,6 +251,7 @@ def mostrar_menu(frame, mesa):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: mensaje_emergente(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
 
 #Pantalla Pedido Confirmado
 def pedido_confirmado(frame, mesa):
@@ -1647,7 +1658,7 @@ def mesas_mozo(frame):
 
      # Contenedor para la imagen de fondo
     fondo_label = QLabel()
-    fondo_label.setPixmap(QPixmap("Digital Order/Iconos/Plano.png"))  
+    fondo_label.setPixmap(QPixmap("Digital Order//Iconos//Plano.png"))  
     fondo_label.setScaledContents(True)
 
     # Crear un contenedor horizontal para mesas y pedidos
@@ -1744,7 +1755,7 @@ def pantalla_principal():
 
     # Configuración de la ventana
     pantalla.setWindowTitle("Digital Order")
-    pantalla.setWindowIcon(QIcon('Digital Order\\Iconos\\DigitalOrder.png'))
+    pantalla.setWindowIcon(QIcon('Digital Order//Iconos//DigitalOrder.png'))
 
     # Tamaño de la ventana
     ancho, alto = 1150, 700

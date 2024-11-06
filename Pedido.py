@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS historial_pedido (
 
 conn.commit()
 
-# Función para agregar un plato al carrito
+
 # Función para agregar un plato al carrito
 def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
     try:
@@ -177,7 +177,6 @@ def reducir_cantidad(cantidad_existente, pedido_id, plato_id):
     except pymysql.MySQLError as e:
         print(f"Error en reducir_cantidad: {e}")
     
-
 # Función para aumentar la cantidad de un plato en el carrito
 def aumentar_cantidad(cantidad_existente, pedido_id, plato_id):
     nueva_cantidad = cantidad_existente + 1
@@ -195,7 +194,6 @@ def obtener_pedidos():
     ''')
     return cursor.fetchall()
 
-
 # Obtener el historial de pedidos sin depender de la tabla pedido
 def obtener_historial():
     try:
@@ -208,8 +206,6 @@ def obtener_historial():
     except pymysql.MySQLError as e:
         print(f"Error al obtener el historial de pedidos: {e}")
         return []
-
-
 
 # Actualizar el estado de un pedido
 def actualizar_estado(pedido_id):
@@ -255,8 +251,6 @@ def eliminar_pedido(pedido_id):
     except pymysql.MySQLError as e:
         print(f"Error al eliminar el pedido: {e}")
 
-
-
 def bloquear_mesa(mesa_id):
     try:
         cursor.execute("SELECT id FROM pedido WHERE numeroMesa = %s", (mesa_id,))
@@ -269,3 +263,5 @@ def bloquear_mesa(mesa_id):
         print(f"Error en la consulta: {e}")
         return False
 
+
+    
