@@ -8,7 +8,6 @@ conn = pymysql.connect(
         database='platos_bd')
 cursor = conn.cursor()
 
-
 #Crea una tabla para Ingredientes en caso de que no exista
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS ingredientes (
@@ -36,7 +35,6 @@ def añadir_ingrediente(nombre_ingresado, cantidad_ingresada):
         return f"Ocurrió un error en la base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
-
 
 #Funcion para mostrar Ingredientes
 def mostrar_bd_Ingredientes ():
@@ -93,3 +91,6 @@ def eliminar_ingrediente(id_seleccionado):
         return f"Ocurrió un error en la base de datos: {e}"
     except Exception as e:
         return f"Error inesperado: {e}"
+    
+    
+

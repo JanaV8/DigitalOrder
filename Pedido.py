@@ -1,5 +1,8 @@
 import pymysql
 
+import Plato
+import Ingredientes
+
 # Conexión con la Base de Datos
 
 conn = pymysql.connect(
@@ -89,38 +92,63 @@ def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
     except pymysql.MySQLError as e:
         print(f"Error en reducir_cantidad: {e}")
        
+
 # Función para confirmar el pedido del carrito
 def confirmar_pedido(pedido_id, numero_mesa):
-    # Verificar si hay un pedido activo con el mismo numeroMesa
-    cursor.execute("SELECT id FROM pedido WHERE numeroMesa=%s AND estado='activo'", (numero_mesa,))
-    if cursor.fetchone():
-        print("Ya hay un pedido activo para esta mesa.")
-        return
+    try:
+        # Obtener los platos y sus cantidades del pedido para verificar disponibilidad
+        cursor.execute("SELECT plato_id, cantidad FROM Pedido_Plato WHERE pedido_id=%s", (pedido_id,))
+        platos_pedido = cursor.fetchall()
 
-    # Calcular el precio total del pedido
-    cursor.execute(""" 
-        SELECT SUM(p.precio * pp.cantidad)
-        FROM Pedido_Plato pp
-        JOIN platos p ON pp.plato_id = p.id
-        WHERE pp.pedido_id=%s
-    """, (pedido_id,))
+        # Verificar disponibilidad de ingredientes para cada plato
+        for plato in platos_pedido:
+            plato_id, cantidad = plato
+            if not Plato.plato_disponible(plato_id, cantidad):  # Llama a plato_disponible con plato_id y cantidad
+                print(f"No hay suficientes ingredientes para el plato con ID {plato_id}. El pedido no puede ser confirmado.")
+                return  # Salir si algún ingrediente no está disponible
 
-    resultado = cursor.fetchone()
-    precio_final = resultado[0] if resultado else 0
+        # Verificar si ya hay un pedido activo con el mismo numeroMesa
+        cursor.execute("SELECT id FROM pedido WHERE numeroMesa=%s AND estado='activo'", (numero_mesa,))
+        if cursor.fetchone():
+            print("Ya hay un pedido activo para esta mesa.")
+            return  # Si ya hay un pedido activo, no se puede confirmar el nuevo
 
-    # Actualizar el estado del pedido y el precio final
-    cursor.execute("UPDATE pedido SET numeroMesa=%s, precioFinal=%s, estado='completado' WHERE id=%s", (numero_mesa, precio_final, pedido_id))
+        # Calcular el precio total del pedido
+        cursor.execute(""" 
+            SELECT SUM(p.precio * pp.cantidad)
+            FROM Pedido_Plato pp
+            JOIN platos p ON pp.plato_id = p.id
+            WHERE pp.pedido_id=%s
+        """, (pedido_id,))
+        resultado = cursor.fetchone()
+        precio_final = resultado[0] if resultado else 0
 
-    # Copiar los datos de Pedido_Plato a historial_pedido
-    cursor.execute('''
-        INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado)
-        SELECT pedido_id, plato_id, cantidad, estado
-        FROM Pedido_Plato
-        WHERE pedido_id = %s
-    ''', (pedido_id,))
+        # Actualizar el estado del pedido y el precio final
+        cursor.execute("UPDATE pedido SET numeroMesa=%s, precioFinal=%s, estado='completado' WHERE id=%s", 
+                       (numero_mesa, precio_final, pedido_id))
 
-    conn.commit()
-    print("Pedido confirmado y completado.")
+        # Copiar los datos de Pedido_Plato a historial_pedido
+        cursor.execute('''
+            INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado)
+            SELECT pedido_id, plato_id, cantidad, estado
+            FROM Pedido_Plato
+            WHERE pedido_id = %s
+        ''', (pedido_id,))
+
+        # Restar los ingredientes correspondientes
+        for plato in platos_pedido:
+            plato_id, cantidad = plato
+            Plato.restar_ingrediente(plato_id, cantidad)  # Llamar a restar_ingredientes para descontar del stock
+
+        conn.commit()
+        print("Pedido confirmado y completado.")
+
+    except pymysql.MySQLError as e:
+        print(f"Error al confirmar el pedido: {e}")
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+
+
 
 # Función para crear un nuevo pedido
 def crear_pedido(numero_mesa):
@@ -254,7 +282,6 @@ def eliminar_pedido(pedido_id):
 def bloquear_mesa(mesa_id):
     try:
         cursor.execute("SELECT id FROM pedido WHERE numeroMesa = %s", (mesa_id,))
-        cursor.execute("SELECT id FROM pedido WHERE numeroMesa = %s", (mesa_id,))
         pedido = cursor.fetchone()
         return pedido is not None
     # Cracion de excepciones para los posibles errores
@@ -262,6 +289,3 @@ def bloquear_mesa(mesa_id):
     except pymysql.MySQLError as e:
         print(f"Error en la consulta: {e}")
         return False
-
-
-    

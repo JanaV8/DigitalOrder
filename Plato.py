@@ -149,28 +149,78 @@ def modificar_plato(plato_id, nuevo_nombre, nueva_descripcion, nuevo_precio, nue
         conn.commit()
     return "Plato modificado exitosamente."
 
-
-def plato_disponible(plato_nombre):
-    # Consulta para obtener los ingredientes del plato por nombre
-    query = """
-        SELECT i.nombre
-        FROM ingredientes i
-        JOIN Plato_Ingredientes pi ON pi.ingrediente_id = i.id
-        JOIN platos p ON pi.plato_id = p.id
-        WHERE p.nombre = %s;
-    """
-    
+# Función para verificar si un plato está disponible según la cantidad de sus ingredientes
+def plato_disponible(plato_id, cantidad_plato):
     try:
-        cursor.execute(query, (plato_nombre,))
-        ingredientes = cursor.fetchall()
+        # Obtener los ingredientes y las cantidades necesarias para el plato
+        cursor.execute("""
+            SELECT i.id, pp.cantidad
+            FROM Plato_Ingredientes pp
+            JOIN ingredientes i ON pp.ingrediente_id = i.id
+            WHERE pp.plato_id = %s
+        """, (plato_id,))
         
-        # Si no se encuentran ingredientes
-        if not ingredientes:
-            print("No se encontraron ingredientes para este plato.")
-        else:
-            print(f"Ingredientes del plato {plato_nombre}:")
-            for ingrediente in ingredientes:
-                print(ingrediente[0])  # Mostramos solo el nombre del ingrediente
+        ingredientes = cursor.fetchall()
 
+        # Verificar que haya suficiente stock de cada ingrediente
+        for ingrediente_id, cantidad_ingrediente in ingredientes:
+            # Calcular la cantidad total requerida para la cantidad de platos solicitada
+            cantidad_requerida = cantidad_ingrediente * cantidad_plato
+            
+            # Verificar el stock disponible del ingrediente
+            cursor.execute("SELECT stock FROM ingredientes WHERE id = %s", (ingrediente_id,))
+            stock_disponible = cursor.fetchone()
+
+            # Si no hay stock o el stock es insuficiente, retornar el mensaje de error
+            if stock_disponible is None or stock_disponible[0] < cantidad_requerida:
+                return False  # Indica que no hay suficientes ingredientes
+        
+        return True  # Si todos los ingredientes tienen suficiente stock
+    
+    except pymysql.MySQLError as e:
+        print(f"Error en la base de datos: {e}")
+        return False
     except Exception as e:
-        print(f"Error al obtener ingredientes: {e}")
+        print(f"Error inesperado: {e}")
+        return False
+
+    
+def restar_ingrediente(plato_id, cantidad):
+    try:
+         # Obtener los ingredientes necesarios para ese plato
+        cursor.execute("SELECT ingrediente_id, cantidad FROM Plato_Ingredientes WHERE plato_id = %s", (plato_id,))
+        ingredientes = cursor.fetchall()
+
+        # Restar la cantidad de cada ingrediente utilizado
+        for ingrediente in ingredientes:
+            ingrediente_id, cantidad_ingrediente = ingrediente
+            nueva_cantidad = cantidad_ingrediente * cantidad  # La cantidad necesaria depende de la cantidad de platos
+            cursor.execute("""
+                UPDATE ingredientes
+                SET stock = stock - %s
+                WHERE id = %s
+            """, (nueva_cantidad, ingrediente_id))
+        
+        conn.commit()
+        print(f"Ingredientes restados para el plato {plato_id}.")
+    except pymysql.MySQLError as e:
+        return f"Error en la base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"
+
+
+def obtener_cantidad_disponible(ingrediente_id):
+    try:
+        # Obtiene la cantidad disponible del ingrediente
+        query = "SELECT stock FROM ingredientes WHERE id = %s"
+        cursor.execute(query, (ingrediente_id,))
+        cantidad = cursor.fetchone()
+
+        if cantidad:
+            return cantidad[0]  # Retorna la cantidad disponible del ingrediente
+        else:
+            return f"No se encontró el ingrediente con ID {ingrediente_id}."
+    except pymysql.MySQLError as e:
+        return f"Error en la base de datos: {e}"
+    except Exception as e:
+        return f"Error inesperado: {e}"

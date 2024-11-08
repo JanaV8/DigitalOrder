@@ -152,7 +152,7 @@ def mostrar_menu(frame, mesa):
             pixmap = QPixmap(imagen).scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             label_imagen.setPixmap(pixmap)
             layout.addWidget(label_imagen)
-      
+
         # Ajustar el espaciado entre los elementos
         layout.setSpacing(5)
 
@@ -190,7 +190,9 @@ def mostrar_menu(frame, mesa):
         item.setSizeHint(widget_personalizado.sizeHint())
         
         # Verificar disponibilidad del plato
-        disponible = Plato.plato_disponible(nombre)
+        # Aquí pasamos la cantidad como 1 (puedes cambiar esto si se selecciona más cantidad)
+        cantidad = 1
+        disponible = Plato.plato_disponible(nombre, cantidad)
         if disponible:
             item.setFlags(item.flags() | Qt.ItemIsEnabled)   # Activa el elemento
             item.setForeground(QBrush(QColor("green")))      # Restaura el color original
@@ -231,7 +233,7 @@ def mostrar_menu(frame, mesa):
         etiqueta_total.setText(f"Total de su Pedido: ${total_pedido:.2f}")
         
         # Agrega el plato al carrito
-        cantidad = 1 
+        cantidad = 1  # Asume que por defecto se selecciona una unidad del plato
         Pedido.agregar_al_carrito(pedido_id, plato_id, cantidad)
 
     # Conecta la señal de clic de la lista
@@ -251,6 +253,7 @@ def mostrar_menu(frame, mesa):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: mensaje_emergente(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
 
 
 #Pantalla Pedido Confirmado
@@ -373,7 +376,7 @@ def mostrar_carrito(frame, mesa, pedido_id):
 
     # Botón para confirmar el pedido
     boton_confirmar = diseño_boton("Confirmar Pedido")
-    boton_confirmar.clicked.connect(lambda: [Pedido.confirmar_pedido(pedido_id, mesa), pedido_confirmado(frame)])
+    boton_confirmar.clicked.connect(lambda: [Pedido.confirmar_pedido(pedido_id, mesa), pedido_confirmado(frame,mesa)])
     frame.addWidget(boton_confirmar, alignment=Qt.AlignCenter)
 
     # Botón para volver al menú
