@@ -26,7 +26,7 @@ def limpiar_pantalla(contenedor):
 def diseño_boton(texto, tamaño=14):
     boton = QPushButton(texto)
     boton.setFont(QFont("Helvetica", tamaño, QFont.Bold))
-    boton.setStyleSheet(f"background-image: url(Digital Order/Iconos/Fondo Boton.png); "
+    boton.setStyleSheet(f"background-image: url(Digital Order//Iconos//Fondo Boton.png); "
                         "color: #ffffff; border: none;")
     boton.setFixedSize(180, 50)  # Ajusta el tamaño del botón
     return boton
@@ -99,12 +99,12 @@ def seleccionar_mesa(frame):
         boton_mesa = QPushButton(f"Mesa {i}")
         boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))  
         boton_mesa.setFixedSize(100, 40)
-        boton_mesa.setStyleSheet("""
-            background-color: #f4f4f4;
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            padding: 10px;
-        """)
+        boton_mesa.setEnabled(not pedido_activo)
+        boton_mesa.clicked.connect(lambda checked, mesa=i: mostrar_menu(frame, mesa))
+        if pedido_activo:
+            boton_mesa.setStyleSheet("background-color: red; color: white;")  # Verde para mesas disponibles
+        else:
+            boton_mesa.setStyleSheet("background-color: #12a14b; color: white;")  # Rojo para mesas ocupadas
 
         # Bloqueo de botón de la mesa
         boton_mesa.setEnabled(not pedido_activo)
@@ -279,7 +279,7 @@ def mensaje_emergente(frame):
         msg_box.setWindowTitle("Confirmación")
         msg_box.setText("¿Estás seguro que deseas volver? Una vez confirmes no podras realizar ningun pedido en la mesa seleccionada")
         
-        msg_box.setWindowIcon(QIcon('Digital Order\\Iconos\\DigitalOrder.png')) 
+        msg_box.setWindowIcon(QIcon('Digital Order\Iconos\DigitalOrder.png')) 
 
         # Cambiar el color de fondo y la tipografía usando CSS
         msg_box.setStyleSheet("""
@@ -1661,7 +1661,7 @@ def mesas_mozo(frame):
 
      # Contenedor para la imagen de fondo
     fondo_label = QLabel()
-    fondo_label.setPixmap(QPixmap("Digital Order//Iconos//Plano.png"))  
+    fondo_label.setPixmap(QPixmap("DigitalOrder\Iconos\Plano.png"))  
     fondo_label.setScaledContents(True)
 
     # Crear un contenedor horizontal para mesas y pedidos
@@ -1677,14 +1677,16 @@ def mesas_mozo(frame):
         pedido_activo = Pedido.bloquear_mesa(i)
 
         boton_mesa = QPushButton(f"Mesa {i}")
-        boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))  
-        boton_mesa.setStyleSheet("background-color: #ffffff;") 
-        boton_mesa.setFixedSize(100, 40)
+        boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))
 
-        # Bloqueo de botón de la mesa
+        if pedido_activo:
+            boton_mesa.setStyleSheet("background-color: #12a14b; color: white;")  # Verde para mesas disponibles
+        else:
+            boton_mesa.setStyleSheet("background-color: red; color: white;")  # Rojo para mesas ocupadas
+
+        boton_mesa.setFixedSize(100,40)
+        
         boton_mesa.setEnabled(pedido_activo)
-        #boton_mesa.clicked.connect(lambda checked, mesa=i: mostrar_menu(frame, mesa))
-
         # Agregar el botón a la cuadrícula
         fila = (i - 1) // 5
         columna = (i - 1) % 5
@@ -1758,7 +1760,7 @@ def pantalla_principal():
 
     # Configuración de la ventana
     pantalla.setWindowTitle("Digital Order")
-    pantalla.setWindowIcon(QIcon('Digital Order//Iconos//DigitalOrder.png'))
+    pantalla.setWindowIcon(QIcon('DigitalOrder\Iconos\DigitalOrder.png'))
 
     # Tamaño de la ventana
     ancho, alto = 1150, 700
