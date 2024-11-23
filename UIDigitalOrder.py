@@ -26,7 +26,7 @@ def limpiar_pantalla(contenedor):
 def diseño_boton(texto, tamaño=14):
     boton = QPushButton(texto)
     boton.setFont(QFont("Helvetica", tamaño, QFont.Bold))
-    boton.setStyleSheet(f"background-image: url(Digital Order//Iconos//Fondo Boton.png); "
+    boton.setStyleSheet(f"background-image: url(Digital Order/Iconos/Fondo Boton.png); "
                         "color: #ffffff; border: none;")
     boton.setFixedSize(180, 50)  # Ajusta el tamaño del botón
     return boton
@@ -142,7 +142,7 @@ def mostrar_menu(frame, mesa):
     platos = Plato.mostrar_menu()
 
     # Función para crear un widget personalizado para cada plato
-    def item_personalizado(nombre, descripcion, precio, imagen, disponible):
+    def item_personalizado(nombre, descripcion, precio, imagen):
         widget = QWidget()
         layout = QVBoxLayout()
 
@@ -152,14 +152,14 @@ def mostrar_menu(frame, mesa):
             pixmap = QPixmap(imagen).scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             label_imagen.setPixmap(pixmap)
             layout.addWidget(label_imagen)
-
+      
         # Ajustar el espaciado entre los elementos
         layout.setSpacing(5)
 
         # Etiqueta del nombre del plato
         label_nombre = QLabel(nombre)
         label_nombre.setFont(QFont("Helvetica", 14, QFont.Bold))
-        label_nombre.setStyleSheet("color: #0a0a0a;" if disponible else "color: #888888;")
+        label_nombre.setStyleSheet("color: #0a0a0a;")
 
         # Etiqueta de la descripción del plato
         label_descripcion = QLabel(descripcion)
@@ -169,7 +169,7 @@ def mostrar_menu(frame, mesa):
         # Etiqueta del precio del plato
         label_precio = QLabel(f"${precio:.2f}")
         label_precio.setFont(QFont("Helvetica", 11))
-        label_precio.setStyleSheet("color: #008f39;" if disponible else "color: #FF0000;")
+        label_precio.setStyleSheet("color: #008f39;")
 
         # Agregar las etiquetas al layout
         layout.addWidget(label_nombre)
@@ -183,26 +183,20 @@ def mostrar_menu(frame, mesa):
 
     # Cargar los platos a la lista
     for plato in platos:
-        plato_id, nombre, descripcion, precio, imagen = plato
-        cantidad = 1  # Verificar disponibilidad para una cantidad estándar
-        
-        # Verifica la disponibilidad del plato
-        disponible = Plato.plato_disponible(plato_id, cantidad) == "El plato está disponible."
-        print(disponible)
-        
-        item = QListWidgetItem(lista_platos)
-        widget_personalizado = item_personalizado(nombre, descripcion, precio, imagen, disponible)
+        nombre, descripcion, precio, imagen = plato
+        item = QListWidgetItem(lista_platos)  
+        widget_personalizado = item_personalizado(nombre, descripcion, precio, imagen)
         lista_platos.setItemWidget(item, widget_personalizado)
         item.setSizeHint(widget_personalizado.sizeHint())
-
-        # Deshabilitar los platos no disponibles
+        
+        # Verificar disponibilidad del plato
+        disponible = Plato.plato_disponible(nombre)
         if disponible:
-            item.setFlags(item.flags() | Qt.ItemIsEnabled)  # Activa el plato
+            item.setFlags(item.flags() | Qt.ItemIsEnabled)   # Activa el elemento
             item.setForeground(QBrush(QColor("green")))      # Restaura el color original
         else:
-            item.setFlags(item.flags() & ~Qt.ItemIsEnabled)  # Desactiva el plato
-            item.setForeground(QBrush(QColor("red")))        # Cambia el color para indicar que no está disponible
-            print(f"Plato {nombre} deshabilitado debido a falta de ingredientes")
+            item.setFlags(item.flags() & ~Qt.ItemIsEnabled)  # Desactiva el elemento
+            item.setForeground(QBrush(QColor("red")))       # Cambia el color para indicar desactivación
 
     # Aplica el estilo hover a la lista
     lista_platos.setStyleSheet("""
@@ -229,23 +223,17 @@ def mostrar_menu(frame, mesa):
 
     # Función para actualizar el total al hacer clic en un plato
     def plato_seleccionado(item):
-        nonlocal total_pedido
+        nonlocal total_pedido  
         row = lista_platos.row(item)  # Obtiene el índice de la fila seleccionada
-        try:
-            precio = float(platos[row][3])  # Obtiene el precio del plato seleccionado
-        except ValueError:
-            print(f"Error al convertir el precio de {platos[row][0]} a número")
-            return  # Termina la función si el precio no es válido
+        precio = platos[row][2]  # Obtiene el precio del plato seleccionado
         plato_id = platos[row][0]
+        total_pedido += precio  # Suma el precio al total
+        etiqueta_total.setText(f"Total de su Pedido: ${total_pedido:.2f}")
         
-        # Solo agrega al carrito si el plato está habilitado
-        if item.flags() & Qt.ItemIsEnabled:  # Verifica si el item está habilitado
-            total_pedido += precio  # Suma el precio al total
-            etiqueta_total.setText(f"Total de su Pedido: ${total_pedido:.2f}")
-            Pedido.agregar_al_carrito(pedido_id, plato_id, 1)
-        else:
-            print(f"Plato {plato_id} no está disponible para agregar.")
-        
+        # Agrega el plato al carrito
+        cantidad = 1 
+        Pedido.agregar_al_carrito(pedido_id, plato_id, cantidad)
+
     # Conecta la señal de clic de la lista
     lista_platos.itemClicked.connect(plato_seleccionado)
 
@@ -263,9 +251,6 @@ def mostrar_menu(frame, mesa):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: mensaje_emergente(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
-
-
-
 
 #Pantalla Pedido Confirmado
 def pedido_confirmado(frame, mesa):
@@ -774,25 +759,19 @@ def agregar_admin(frame):
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
 
-# Funcion para verificar si el Administrador es Correcto
+#Funcion para verificar si el Administrador es Correcto
 def admin_correcto(frame, usuario, contraseña):
     # Verificar si los campos están vacíos
     if not usuario or not contraseña:
-        mensaje = QLabel("Usuario y/o contraseña vacíos")
-        mensaje.setFont(QFont("Helvetica", 14))
-        frame.addWidget(mensaje)
-        return  
+        mostrar_mensaje("Error", "Por favor, complete todos los campos.", QMessageBox.Warning)
+        return
 
     # Intenta agregar el administrador solo si los campos son válidos
     isCorrect = Administrador.agregar_administrador(usuario, contraseña)
     if isCorrect:
-        mensaje = QLabel("Se agregó el usuario correctamente")
-        mensaje.setFont(QFont("Helvetica", 14))
-        frame.addWidget(mensaje)
+        mostrar_mensaje("Éxito", f"El administrador '{usuario}' ha sido agregado correctamente.")
     else:
-        mensaje = QLabel("Error al agregar el usuario")
-        mensaje.setFont(QFont("Helvetica", 14))
-        frame.addWidget(mensaje)     
+        mostrar_mensaje("Error", "No es posible agregar un Administrador", QMessageBox.Warning)    
 
 #Pantalla Modificar Admin
 def modificar_admin(frame):
@@ -1087,7 +1066,36 @@ def editar_menu(frame):
 
     # Alinea el layout de botones al centro
     button_layout.setAlignment(Qt.AlignCenter)
-        
+
+# Función para mostrar mensaje emergente
+def mostrar_mensaje(titulo, texto, icono=QMessageBox.Information):
+    mensaje = QMessageBox()
+    mensaje.setWindowTitle(titulo)
+    mensaje.setText(texto)
+    mensaje.setIcon(icono)
+    mensaje.setWindowIcon(QIcon('Digital Order\\Iconos\\DigitalOrder.png'))
+    mensaje.setStyleSheet("""
+        QMessageBox {
+            background-color: #d9b5a9;  /* Color de fondo personalizado */
+            font-family: Helvetica;      /* Tipografía Helvetica */
+            font-size: 14px;             /* Tamaño de fuente */
+        }
+        QLabel {
+            color: black;               /* Color del texto principal */
+        }
+        QPushButton {
+            background-color: #4CAF50;  /* Color de fondo de los botones */
+            color: white;               /* Color del texto de los botones */
+            font-weight: bold;
+            min-width: 80px;
+        }
+        QPushButton:hover {
+            background-color: #45a049;  /* Color de botón al pasar el cursor */
+        }
+    """)
+    mensaje.setStandardButtons(QMessageBox.Ok)
+    mensaje.exec_()
+
 #Pantalla editar ingredientes
 def editar_ingredientes(frame):
     #Limpia pantalla
@@ -1238,13 +1246,27 @@ def agregar_cocinero(frame):
 
     # Boton agregar cocinero
     boton_agregar=diseño_boton("Agregar")
-    boton_agregar.clicked.connect(lambda: Cocinero.agregar_Cocineros(entry_usuario.text(),entry_contraseña.text()))
+    boton_agregar.clicked.connect(lambda: cocinero_correcto(frame,entry_usuario.text(),entry_contraseña.text()))
     frame.addWidget(boton_agregar, alignment=Qt.AlignCenter)
 
     # Botón para volver al menu del administrador
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
+#Funcion para verificar si el Cocinero es Correcto
+def cocinero_correcto(frame, usuario, contraseña):
+    # Verificar si los campos están vacíos
+    if not usuario or not contraseña:
+        mostrar_mensaje("Error", "Por favor, complete todos los campos.", QMessageBox.Warning)
+        return
+
+    # Intenta agregar el cocinero solo si los campos son válidos
+    isCorrect = Cocinero.agregar_Cocineros(usuario, contraseña)
+    if isCorrect:
+        mostrar_mensaje("Éxito", f"El cocinero '{usuario}' ha sido agregado correctamente.")
+    else:
+        mostrar_mensaje("Error", "No es posible agregar un Cocinero", QMessageBox.Warning)
 
 def modificar_cocinero(frame):
     # Limpia la Pantalla
@@ -1392,13 +1414,27 @@ def agregar_mozo(frame):
 
     # Boton agregar Mozo
     boton_agregar=diseño_boton("Agregar")
-    boton_agregar.clicked.connect(lambda: Mozo.agregar_mozo(entry_usuario.text(),entry_contraseña.text()))
+    boton_agregar.clicked.connect(lambda: mozo_correcto(frame,entry_usuario.text(),entry_contraseña.text()))
     frame.addWidget(boton_agregar, alignment=Qt.AlignCenter)
 
     # Botón para volver al menu del administrador
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
+#Funcion para verificar si el Mozo es Correcto
+def mozo_correcto(frame, usuario, contraseña):
+    # Verificar si los campos están vacíos
+    if not usuario or not contraseña:
+        mostrar_mensaje("Error", "Por favor, complete todos los campos.", QMessageBox.Warning)
+        return
+
+    # Intenta agregar el mozo solo si los campos son válidos
+    isCorrect = Mozo.agregar_mozo(usuario, contraseña)
+    if isCorrect:
+        mostrar_mensaje("Éxito", f"El mozo '{usuario}' ha sido agregado correctamente.")
+    else:
+        mostrar_mensaje("Error", "No es posible agregar un mozo", QMessageBox.Warning)
 
 def modificar_mozo(frame):
    # Limpia la Pantalla
@@ -1515,11 +1551,17 @@ def modificar_mozo(frame):
     button_layout.setAlignment(Qt.AlignCenter) 
 
 def mostrar_historial_pedidos(frame):
+
     # Consulta para obtener los pedidos
     pedidos = Pedido.obtener_historial()  # Usamos el método que ya tienes para obtener los pedidos
-    
-    # Limpiar la pantalla
+
+    #Limpiar la pantalla
     limpiar_pantalla(frame)
+
+    label_historial = QLabel("Historial de Pedidos")
+    label_historial.setFont(QFont("Helvetica", 18, QFont.Bold))
+    label_historial.setAlignment(Qt.AlignCenter)
+    frame.addWidget(label_historial)
 
     # Crear un QScrollArea para los pedidos
     scroll_area = QScrollArea()
@@ -1532,12 +1574,11 @@ def mostrar_historial_pedidos(frame):
     # Agrupar los pedidos por ID
     pedidos_dict = {}
     for pedido in pedidos:
-        pedido_id, numero_mesa, plato, cantidad, estado = pedido
+        pedido_id, numero_mesa, plato, cantidad = pedido
         if pedido_id not in pedidos_dict:
             pedidos_dict[pedido_id] = {
                 'numero_mesa': numero_mesa,
                 'platos': {},
-                'estado': estado
             }
         # Aquí sumamos la cantidad si el plato ya existe en el diccionario
         if plato in pedidos_dict[pedido_id]['platos']:
@@ -1547,7 +1588,6 @@ def mostrar_historial_pedidos(frame):
 
     # Layout para los pedidos agrupados
     for pedido_id, detalles in pedidos_dict.items():
-        estado = detalles['estado']
         platos = detalles['platos']
 
         # Crear una caja para cada pedido
@@ -1558,13 +1598,10 @@ def mostrar_historial_pedidos(frame):
         for plato, cantidad in platos.items():
             layout_pedido.addWidget(QLabel(f"Plato: {plato}, Cantidad: {cantidad}"))
 
-        # Mostrar el estado actual del pedido
-        layout_pedido.addWidget(QLabel(f"Estado actual: {estado}"))
-
         # Añadir el layout del pedido al group box
         group_box.setLayout(layout_pedido)
         # Añadir el group_box al layout scroll
-        scroll_layout.addWidget(group_box)  
+        scroll_layout.addWidget(group_box)
 
     # Establecer el widget de contenido desplazable en el área de scroll
     scroll_content.setLayout(scroll_layout)
@@ -1572,8 +1609,8 @@ def mostrar_historial_pedidos(frame):
 
     # Añadir el área de scroll al frame principal
     frame.addWidget(scroll_area)
-    
-    # Botón para volver a la pantalla inicial
+
+    #Botón para volver a la pantalla inicial
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: menu_admin(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
