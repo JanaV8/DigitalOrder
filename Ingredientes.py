@@ -92,5 +92,15 @@ def eliminar_ingrediente(id_seleccionado):
     except Exception as e:
         return f"Error inesperado: {e}"
     
-    
+def verificar_stock(ingrediente_id, cantidad_requerida):
+        try:
+            cursor.execute("SELECT stock FROM ingredientes WHERE id = %s", (ingrediente_id,))
+            stock_disponible = cursor.fetchone()
+
+            if stock_disponible is None or float(stock_disponible[0]) < cantidad_requerida:
+                return False
+            return True
+        except pymysql.MySQLError as e:
+            print(f"Error al verificar stock de ingrediente {ingrediente_id}: {e}")
+            return False    
 

@@ -142,7 +142,7 @@ def mostrar_menu(frame, mesa):
     platos = Plato.mostrar_menu()
 
     # Función para crear un widget personalizado para cada plato
-    def item_personalizado(nombre, descripcion, precio, imagen):
+    def item_personalizado(nombre, descripcion, precio, imagen, disponible):
         widget = QWidget()
         layout = QVBoxLayout()
 
@@ -159,7 +159,7 @@ def mostrar_menu(frame, mesa):
         # Etiqueta del nombre del plato
         label_nombre = QLabel(nombre)
         label_nombre.setFont(QFont("Helvetica", 14, QFont.Bold))
-        label_nombre.setStyleSheet("color: #0a0a0a;")
+        label_nombre.setStyleSheet("color: #0a0a0a;" if disponible else "color: #888888;")
 
         # Etiqueta de la descripción del plato
         label_descripcion = QLabel(descripcion)
@@ -169,7 +169,7 @@ def mostrar_menu(frame, mesa):
         # Etiqueta del precio del plato
         label_precio = QLabel(f"${precio:.2f}")
         label_precio.setFont(QFont("Helvetica", 11))
-        label_precio.setStyleSheet("color: #008f39;")
+        label_precio.setStyleSheet("color: #008f39;" if disponible else "color: #FF0000;")
 
         # Agregar las etiquetas al layout
         layout.addWidget(label_nombre)
@@ -183,22 +183,26 @@ def mostrar_menu(frame, mesa):
 
     # Cargar los platos a la lista
     for plato in platos:
-        nombre, descripcion, precio, imagen = plato
-        item = QListWidgetItem(lista_platos)  
-        widget_personalizado = item_personalizado(nombre, descripcion, precio, imagen)
+        plato_id, nombre, descripcion, precio, imagen = plato
+        cantidad = 1  # Verificar disponibilidad para una cantidad estándar
+        
+        # Verifica la disponibilidad del plato
+        disponible = Plato.plato_disponible(plato_id, cantidad) == "El plato está disponible."
+        print(disponible)
+        
+        item = QListWidgetItem(lista_platos)
+        widget_personalizado = item_personalizado(nombre, descripcion, precio, imagen, disponible)
         lista_platos.setItemWidget(item, widget_personalizado)
         item.setSizeHint(widget_personalizado.sizeHint())
-        
-        # Verificar disponibilidad del plato
-        # Aquí pasamos la cantidad como 1 (puedes cambiar esto si se selecciona más cantidad)
-        cantidad = 1
-        disponible = Plato.plato_disponible(nombre, cantidad)
+
+        # Deshabilitar los platos no disponibles
         if disponible:
-            item.setFlags(item.flags() | Qt.ItemIsEnabled)   # Activa el elemento
+            item.setFlags(item.flags() | Qt.ItemIsEnabled)  # Activa el plato
             item.setForeground(QBrush(QColor("green")))      # Restaura el color original
         else:
-            item.setFlags(item.flags() & ~Qt.ItemIsEnabled)  # Desactiva el elemento
-            item.setForeground(QBrush(QColor("red")))       # Cambia el color para indicar desactivación
+            item.setFlags(item.flags() & ~Qt.ItemIsEnabled)  # Desactiva el plato
+            item.setForeground(QBrush(QColor("red")))        # Cambia el color para indicar que no está disponible
+            print(f"Plato {nombre} deshabilitado debido a falta de ingredientes")
 
     # Aplica el estilo hover a la lista
     lista_platos.setStyleSheet("""
@@ -225,17 +229,23 @@ def mostrar_menu(frame, mesa):
 
     # Función para actualizar el total al hacer clic en un plato
     def plato_seleccionado(item):
-        nonlocal total_pedido  
+        nonlocal total_pedido
         row = lista_platos.row(item)  # Obtiene el índice de la fila seleccionada
-        precio = platos[row][2]  # Obtiene el precio del plato seleccionado
+        try:
+            precio = float(platos[row][3])  # Obtiene el precio del plato seleccionado
+        except ValueError:
+            print(f"Error al convertir el precio de {platos[row][0]} a número")
+            return  # Termina la función si el precio no es válido
         plato_id = platos[row][0]
-        total_pedido += precio  # Suma el precio al total
-        etiqueta_total.setText(f"Total de su Pedido: ${total_pedido:.2f}")
         
-        # Agrega el plato al carrito
-        cantidad = 1  # Asume que por defecto se selecciona una unidad del plato
-        Pedido.agregar_al_carrito(pedido_id, plato_id, cantidad)
-
+        # Solo agrega al carrito si el plato está habilitado
+        if item.flags() & Qt.ItemIsEnabled:  # Verifica si el item está habilitado
+            total_pedido += precio  # Suma el precio al total
+            etiqueta_total.setText(f"Total de su Pedido: ${total_pedido:.2f}")
+            Pedido.agregar_al_carrito(pedido_id, plato_id, 1)
+        else:
+            print(f"Plato {plato_id} no está disponible para agregar.")
+        
     # Conecta la señal de clic de la lista
     lista_platos.itemClicked.connect(plato_seleccionado)
 
@@ -253,6 +263,7 @@ def mostrar_menu(frame, mesa):
     boton_volver = diseño_boton("Volver")
     boton_volver.clicked.connect(lambda: mensaje_emergente(frame))
     frame.addWidget(boton_volver, alignment=Qt.AlignCenter)
+
 
 
 
@@ -279,7 +290,7 @@ def mensaje_emergente(frame):
         msg_box.setWindowTitle("Confirmación")
         msg_box.setText("¿Estás seguro que deseas volver? Una vez confirmes no podras realizar ningun pedido en la mesa seleccionada")
         
-        msg_box.setWindowIcon(QIcon('Digital Order\Iconos\DigitalOrder.png')) 
+        msg_box.setWindowIcon(QIcon('Digital Order\\Iconos\\DigitalOrder.png')) 
 
         # Cambiar el color de fondo y la tipografía usando CSS
         msg_box.setStyleSheet("""
@@ -1661,7 +1672,7 @@ def mesas_mozo(frame):
 
      # Contenedor para la imagen de fondo
     fondo_label = QLabel()
-    fondo_label.setPixmap(QPixmap("DigitalOrder\Iconos\Plano.png"))  
+    fondo_label.setPixmap(QPixmap("DigitalOrder\\Iconos\\Plano.png"))  
     fondo_label.setScaledContents(True)
 
     # Crear un contenedor horizontal para mesas y pedidos
@@ -1760,7 +1771,7 @@ def pantalla_principal():
 
     # Configuración de la ventana
     pantalla.setWindowTitle("Digital Order")
-    pantalla.setWindowIcon(QIcon('DigitalOrder\Iconos\DigitalOrder.png'))
+    pantalla.setWindowIcon(QIcon('DigitalOrder\\Iconos\\DigitalOrder.png'))
 
     # Tamaño de la ventana
     ancho, alto = 1150, 700

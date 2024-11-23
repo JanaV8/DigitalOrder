@@ -1,4 +1,5 @@
 import pymysql
+import Ingredientes
 
 conn = pymysql.connect( 
         host='26.92.40.13',
@@ -50,7 +51,7 @@ def mostrar_platos():
 #Funcion para mostrar el menu al cliente
 def mostrar_menu ():
     #Obtiene los datos de la tabla platos
-    cursor.execute("SELECT nombre, descripcion, precio, imagen FROM platos") 
+    cursor.execute("SELECT id, nombre, descripcion, precio, imagen FROM platos") 
     Lista_menu = cursor.fetchall()
     return Lista_menu
 
@@ -105,54 +106,56 @@ def eliminar_plato(plato_id):
 
 #Funcion para modificar un plato (Administrador)
 def modificar_plato(plato_id, nuevo_nombre, nueva_descripcion, nuevo_precio, nuevos_ingredientes, imagen):
-    # Actualiza los datos del plato
-    if nuevo_nombre is not None or nueva_descripcion is not None or nuevo_precio is not None or imagen is not None:
-        cursor.execute('''
-            UPDATE platos
-            SET nombre = COALESCE(%s, nombre), 
-                descripcion = COALESCE(%s, descripcion), 
-                precio = COALESCE(%s, precio),
-                imagen = COALESCE(%s, imagen)
-            WHERE id = %s
-        ''', (nuevo_nombre, nueva_descripcion, nuevo_precio, imagen, plato_id))
-        conn.commit()
+    # Armar la consulta SQL dinámicamente
+    query = '''
+        UPDATE platos
+        SET nombre = COALESCE(%s, nombre),
+            descripcion = COALESCE(%s, descripcion),
+            precio = COALESCE(%s, precio)
+    '''
+    params = [nuevo_nombre, nueva_descripcion, nuevo_precio]
 
-    # Actualiza los ingredientes
-        ingredientes_lista = []
-        for ingrediente in nuevos_ingredientes.split(';'):
-            nombre, cantidad = ingrediente.split(',')
-            # Agrega tupla a la lista
-            ingredientes_lista.append((nombre.strip(), cantidad.strip()))  
+    # Agregar imagen solo si no es None
+    if imagen is not None:
+        query += ", imagen = %s"
+        params.append(imagen)
 
-        # Actualiza el plato en la base de datos
-        cursor.execute(
-            "UPDATE platos SET nombre = %s, descripcion = %s, precio = %s, imagen = %s WHERE id = %s",
-            (nuevo_nombre, nueva_descripcion, nuevo_precio, imagen, plato_id)
-        )
+    query += " WHERE id = %s"
+    params.append(plato_id)
 
-        # Elimina los ingredientes existentes del plato
-        cursor.execute("DELETE FROM Plato_Ingredientes WHERE plato_id = %s", (plato_id,))
+    # Ejecutar la consulta SQL
+    cursor.execute(query, params)
+    conn.commit()
 
-        # Agrega los nuevos ingredientes al plato
-        for nombre_ingrediente, cantidad in ingredientes_lista:
-            # Verifica que el ingrediente exista en la base de datos
-            cursor.execute("SELECT id FROM ingredientes WHERE nombre = %s", (nombre_ingrediente,))
-            resultado = cursor.fetchone()
-            if resultado:
-                ingrediente_id = resultado[0]
-                cursor.execute(
-                    "INSERT INTO Plato_Ingredientes (plato_id, ingrediente_id, cantidad) VALUES (%s, %s, %s)",
-                    (plato_id, ingrediente_id, cantidad)
-                )
-            else:
-                print(f"Ingrediente '{nombre_ingrediente}' no encontrado. No se puede agregar.")
-        conn.commit()
+    # Actualizar los ingredientes
+    ingredientes_lista = []
+    for ingrediente in nuevos_ingredientes.split(';'):
+        nombre, cantidad = ingrediente.split(',')
+        ingredientes_lista.append((nombre.strip(), cantidad.strip()))
+
+    # Eliminar los ingredientes existentes del plato
+    cursor.execute("DELETE FROM Plato_Ingredientes WHERE plato_id = %s", (plato_id,))
+
+    # Agregar los nuevos ingredientes al plato
+    for nombre_ingrediente, cantidad in ingredientes_lista:
+        cursor.execute("SELECT id FROM ingredientes WHERE nombre = %s", (nombre_ingrediente,))
+        resultado = cursor.fetchone()
+        if resultado:
+            ingrediente_id = resultado[0]
+            cursor.execute(
+                "INSERT INTO Plato_Ingredientes (plato_id, ingrediente_id, cantidad) VALUES (%s, %s, %s)",
+                (plato_id, ingrediente_id, cantidad)
+            )
+        else:
+            print(f"Ingrediente '{nombre_ingrediente}' no encontrado. No se puede agregar.")
+    conn.commit()
+
     return "Plato modificado exitosamente."
 
 # Función para verificar si un plato está disponible según la cantidad de sus ingredientes
+
 def plato_disponible(plato_id, cantidad_plato):
     try:
-        # Obtener los ingredientes y las cantidades necesarias para el plato
         cursor.execute("""
             SELECT i.id, pp.cantidad
             FROM Plato_Ingredientes pp
@@ -161,28 +164,30 @@ def plato_disponible(plato_id, cantidad_plato):
         """, (plato_id,))
         
         ingredientes = cursor.fetchall()
-
-        # Verificar que haya suficiente stock de cada ingrediente
+        
+        # Flag para verificar si algún ingrediente no tiene suficiente stock
+        plato_disponible = True
+        
         for ingrediente_id, cantidad_ingrediente in ingredientes:
-            # Calcular la cantidad total requerida para la cantidad de platos solicitada
             cantidad_requerida = cantidad_ingrediente * cantidad_plato
             
-            # Verificar el stock disponible del ingrediente
             cursor.execute("SELECT stock FROM ingredientes WHERE id = %s", (ingrediente_id,))
             stock_disponible = cursor.fetchone()
-
-            # Si no hay stock o el stock es insuficiente, retornar el mensaje de error
+            
             if stock_disponible is None or stock_disponible[0] < cantidad_requerida:
-                return False  # Indica que no hay suficientes ingredientes
+                print(f"Ingrediente ID: {ingrediente_id}, Cantidad por Plato: {cantidad_ingrediente}, Cantidad Requerida: {cantidad_requerida}, Stock Disponible: {stock_disponible}")
+                plato_disponible = False  # Si hay un ingrediente con falta de stock, marca el plato como no disponible
         
-        return True  # Si todos los ingredientes tienen suficiente stock
+        return plato_disponible  # Retorna True si todos los ingredientes tienen suficiente stock, False si no
     
     except pymysql.MySQLError as e:
         print(f"Error en la base de datos: {e}")
         return False
-    except Exception as e:
-        print(f"Error inesperado: {e}")
-        return False
+
+
+
+
+
 
     
 def restar_ingrediente(plato_id, cantidad):
