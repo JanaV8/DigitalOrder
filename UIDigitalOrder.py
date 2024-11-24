@@ -1709,7 +1709,7 @@ def mesas_mozo(frame):
 
      # Contenedor para la imagen de fondo
     fondo_label = QLabel()
-    fondo_label.setPixmap(QPixmap("DigitalOrder\\Iconos\\Plano.png"))  
+    fondo_label.setPixmap(QPixmap("Digital Order//Iconos//Plano.png"))  
     fondo_label.setScaledContents(True)
 
     # Crear un contenedor horizontal para mesas y pedidos
@@ -1723,8 +1723,8 @@ def mesas_mozo(frame):
     # Crea los botones de las 20 mesas en una cuadrícula 4x5
     for i in range(1, 11):
         pedido_activo = Pedido.bloquear_mesa(i)
-
         boton_mesa = QPushButton(f"Mesa {i}")
+        boton_mesa.setFixedSize(100, 40)
         boton_mesa.setFont(QFont("Helvetica", 14, QFont.Bold))
 
         if pedido_activo:
@@ -1732,9 +1732,6 @@ def mesas_mozo(frame):
         else:
             boton_mesa.setStyleSheet("background-color: red; color: white;")  # Rojo para mesas ocupadas
 
-        boton_mesa.setFixedSize(100,40)
-        
-        boton_mesa.setEnabled(pedido_activo)
         # Agregar el botón a la cuadrícula
         fila = (i - 1) // 5
         columna = (i - 1) % 5
@@ -1808,7 +1805,7 @@ def pantalla_principal():
 
     # Configuración de la ventana
     pantalla.setWindowTitle("Digital Order")
-    pantalla.setWindowIcon(QIcon('DigitalOrder\\Iconos\\DigitalOrder.png'))
+    pantalla.setWindowIcon(QIcon('Digital Order\\Iconos\\DigitalOrder.png'))
 
     # Tamaño de la ventana
     ancho, alto = 1150, 700

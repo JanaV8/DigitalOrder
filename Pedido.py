@@ -229,8 +229,7 @@ def actualizar_estado(pedido_id):
         elif estado_actual == "En preparación":
             nuevo_estado = "Listo"
         elif estado_actual == "Listo":
-            # Eliminar el pedido solo al confirmar nuevamente
-            eliminar_pedido(pedido_id)  # O simplemente puedes no hacer nada aquí y dejar el pedido en la tabla
+               
             return True 
         else:
             return False  
