@@ -1,4 +1,5 @@
 import pymysql
+import Plato
 
 # Conexión con la Base de Datos
 
@@ -59,7 +60,6 @@ CREATE TABLE IF NOT EXISTS historial_pedido (
 
 conn.commit()
 
-# Función para agregar un plato al carrito
 def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
     try:
         # Busca la ID del plato mediante su nombre
@@ -68,6 +68,13 @@ def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
 
         if resultado:
             plato_id = resultado[0]
+
+            # Verifica y resta ingredientes antes de continuar
+            if not Plato.restar_ingrediente(plato_id, cantidad):
+                print(f"No se pudo agregar el plato '{nombre_plato}' al carrito por falta de ingredientes.")
+                return
+
+            # Verificar si ya está en el carrito
             cursor.execute("SELECT cantidad FROM Pedido_Plato WHERE pedido_id = %s AND plato_id = %s", (pedido_id, plato_id))
             resultado_carrito = cursor.fetchone()
 
@@ -77,16 +84,20 @@ def agregar_al_carrito(pedido_id, nombre_plato, cantidad):
             else:
                 cursor.execute("INSERT INTO Pedido_Plato (pedido_id, plato_id, cantidad) VALUES (%s, %s, %s)", (pedido_id, plato_id, cantidad))
 
-            # Se inserta en el historial sin restricciones
+            # Inserta en el historial sin restricciones
             cursor.execute("INSERT INTO historial_pedido (pedido_id, plato_id, cantidad, estado) VALUES (%s, %s, %s, 'Confirmado')", (pedido_id, plato_id, cantidad))
 
             conn.commit()
             print("Plato agregado o actualizado en el carrito y sincronizado en historial_pedido.")
         else:
             print("Plato no encontrado en la base de datos.")
-    # Cracion de excepciones para los posibles errores 
     except pymysql.MySQLError as e:
-        print(f"Error en reducir_cantidad: {e}")
+        conn.rollback()  # Asegura revertir cambios en caso de error
+        print(f"Error en la base de datos: {e}")
+    except Exception as e:
+        conn.rollback()
+        print(f"Error inesperado: {e}")
+
        
 # Función para confirmar el pedido del carrito
 def confirmar_pedido(pedido_id, numero_mesa):
@@ -243,17 +254,26 @@ def actualizar_estado(pedido_id):
 # Eliminar un pedido
 def eliminar_pedido(pedido_id):
     try:
-        # Primero eliminamos los platos asociados al pedido
+        # Verificar si todos los platos del pedido están en estado "Listo"
+        cursor.execute("SELECT COUNT(*) FROM Pedido_Plato WHERE pedido_id = %s AND estado != 'Listo'", (pedido_id,))
+        resultado = cursor.fetchone()
+
+        if not resultado or resultado[0] > 0:
+            print(f"El pedido no puede ser eliminado porque no todos los platos están en estado 'Listo'.")
+            return
+
+        # Eliminar los platos asociados al pedido
         cursor.execute("DELETE FROM Pedido_Plato WHERE pedido_id = %s", (pedido_id,))
         conn.commit()
 
-        # Ahora eliminamos el pedido de la tabla principal
+        # Eliminar el pedido de la tabla principal
         cursor.execute("DELETE FROM pedido WHERE id = %s", (pedido_id,))
         conn.commit()
-        
+
         print(f"Pedido {pedido_id} eliminado de la tabla pedido y de Pedido_Plato.")
     except pymysql.MySQLError as e:
         print(f"Error al eliminar el pedido: {e}")
+
 
 def bloquear_mesa(mesa_id):
     try:

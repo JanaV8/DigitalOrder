@@ -51,7 +51,7 @@ def pantalla_inicial(frame):
     frame.addWidget(boton_mesa, alignment=Qt.AlignCenter)
 
     # Botón Iniciar sesión Administrador
-    boton_admin = diseño_boton("Iniciar Sesión \n Admin")
+    boton_admin = diseño_boton("Iniciar Sesión \n Administrador")
     boton_admin.clicked.connect(lambda: iniciar_sesion(frame))
     frame.addWidget(boton_admin, alignment=Qt.AlignCenter)
 
@@ -838,6 +838,12 @@ def modificar_admin(frame):
     contraseña_nueva.setStyleSheet("background-color: white;")
     input_layout.addWidget(contraseña_nueva, alignment=Qt.AlignCenter)
 
+    # Botón para vaciar los campos
+    btn_vaciar = diseño_boton("Vaciar Campos")
+    btn_vaciar.clicked.connect(lambda: [id_ingresado.clear(), nombre_nuevo.clear(), contraseña_nueva.clear()])
+    input_layout.addWidget(btn_vaciar)
+
+
     # Añade el layout de inputs al layout principal
     main_layout.addLayout(input_layout)
 
@@ -987,6 +993,11 @@ def editar_menu(frame):
 
     # Variable para almacenar la ruta de la imagen
     ruta_imagen = ""
+
+    # Botón para vaciar los campos
+    btn_vaciar = diseño_boton("Vaciar Campos")
+    btn_vaciar.clicked.connect(lambda: [id_ingresado.clear(), nombre_nuevo.clear(), descripcion_nueva.clear(),precio_nuevo.clear(),ingredientes_nuevo.clear()])
+    input_layout.addWidget(btn_vaciar)
 
     # Función para abrir el diálogo de archivo
     def cargar_imagen():
@@ -1161,6 +1172,11 @@ def editar_ingredientes(frame):
     stock_nueva.setStyleSheet("background-color: white;")
     input_layout.addWidget(stock_nueva, alignment=Qt.AlignCenter)
 
+    # Botón para vaciar los campos
+    btn_vaciar = diseño_boton("Vaciar Campos")
+    btn_vaciar.clicked.connect(lambda: [id_ingresado.clear(), nombre_nuevo.clear(), stock_nueva.clear()])
+    input_layout.addWidget(btn_vaciar)
+
     # Añade el layout de inputs al layout principal
     main_layout.addLayout(input_layout)
 
@@ -1332,6 +1348,11 @@ def modificar_cocinero(frame):
     contraseña_nueva.setStyleSheet("background-color: white;")
     input_layout.addWidget(contraseña_nueva, alignment=Qt.AlignCenter)
 
+    # Botón para vaciar los campos
+    btn_vaciar = diseño_boton("Vaciar Campos")
+    btn_vaciar.clicked.connect(lambda: [id_ingresado.clear(), nombre_nuevo.clear(), contraseña_nueva.clear()])
+    input_layout.addWidget(btn_vaciar)
+
     # Añade el layout de inputs al layout principal
     main_layout.addLayout(input_layout)
 
@@ -1499,6 +1520,11 @@ def modificar_mozo(frame):
     contraseña_nueva = QtWidgets.QLineEdit()
     contraseña_nueva.setStyleSheet("background-color: white;")
     input_layout.addWidget(contraseña_nueva, alignment=Qt.AlignCenter)
+
+    # Botón para vaciar los campos
+    btn_vaciar = diseño_boton("Vaciar Campos")
+    btn_vaciar.clicked.connect(lambda: [id_ingresado.clear(), nombre_nuevo.clear(), contraseña_nueva.clear()])
+    input_layout.addWidget(btn_vaciar)
 
     # Añade el layout de inputs al layout principal
     main_layout.addLayout(input_layout)

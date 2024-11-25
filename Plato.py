@@ -176,26 +176,43 @@ def plato_disponible(plato_nombre):
 
 def restar_ingrediente(plato_id, cantidad):
     try:
-         # Obtener los ingredientes necesarios para ese plato
+        # Obtener los ingredientes necesarios para ese plato
         cursor.execute("SELECT ingrediente_id, cantidad FROM Plato_Ingredientes WHERE plato_id = %s", (plato_id,))
         ingredientes = cursor.fetchall()
 
-        # Restar la cantidad de cada ingrediente utilizado
         for ingrediente in ingredientes:
             ingrediente_id, cantidad_ingrediente = ingrediente
-            nueva_cantidad = cantidad_ingrediente * cantidad  # La cantidad necesaria depende de la cantidad de platos
+            cantidad_necesaria = cantidad_ingrediente * cantidad  # Cantidad total requerida
+
+            # Verificar si hay suficiente stock
+            cursor.execute("SELECT stock FROM ingredientes WHERE id = %s", (ingrediente_id,))
+            resultado = cursor.fetchone()
+
+            if not resultado or resultado[0] < cantidad_necesaria:
+                print(f"No hay suficiente stock para el ingrediente {ingrediente_id}.")
+                return False
+
+            # Restar el stock si hay suficiente
             cursor.execute("""
                 UPDATE ingredientes
                 SET stock = stock - %s
                 WHERE id = %s
-            """, (nueva_cantidad, ingrediente_id))
-        
+            """, (cantidad_necesaria, ingrediente_id))
+
         conn.commit()
         print(f"Ingredientes restados para el plato {plato_id}.")
+        return True
+
     except pymysql.MySQLError as e:
-        return f"Error en la base de datos: {e}"
+        conn.rollback()  # Revertir los cambios en caso de error
+        print(f"Error en la base de datos: {e}")
+        return False
+
     except Exception as e:
-        return f"Error inesperado: {e}"
+        conn.rollback()
+        print(f"Error inesperado: {e}")
+        return False
+
 
 def obtener_cantidad_disponible(ingrediente_id):
     try:
